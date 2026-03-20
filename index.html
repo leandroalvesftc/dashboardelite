@@ -1709,9 +1709,29 @@ function renderVendasTable() {
     </tr>`).join('');
 }
 
+async function deleteVendaFromSheets(venda) {
+  if (!SHEETS_WEBAPP_URL) return;
+  try {
+    await fetch(SHEETS_WEBAPP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({
+        action: 'excluir-venda',
+        date: venda.date,
+        tipo: venda.tipo,
+        cliente: venda.cliente,
+        vlrRec: venda.vlrRec
+      })
+    });
+  } catch(err) { console.warn('deleteVendaFromSheets:', err.message); }
+}
+
 function excluirVenda(id) {
   if (!confirm('Excluir este registro?')) return;
-  saveSales(getSales().filter(v => v.id !== id));
+  const all   = getSales();
+  const venda = all.find(v => v.id === id);
+  saveSales(all.filter(v => v.id !== id));
+  if (venda) deleteVendaFromSheets(venda);
   renderVendasTable();
   renderAnalytics();
 }
@@ -2103,6 +2123,30 @@ function getProducts() {
 }
 function saveProducts(prods) { localStorage.setItem(PRODUCTS_KEY, JSON.stringify(prods)); }
 
+async function syncProductsToSheets(prods) {
+  if (!SHEETS_WEBAPP_URL) return;
+  try {
+    await fetch(SHEETS_WEBAPP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({ action: 'salvar-produtos', produtos: prods })
+    });
+  } catch(err) { console.warn('syncProductsToSheets:', err.message); }
+}
+
+async function loadProductsFromSheets() {
+  if (!SHEETS_WEBAPP_URL) return;
+  try {
+    const resp = await fetch(SHEETS_WEBAPP_URL + '?action=produtos', { redirect: 'follow' });
+    const json = await resp.json();
+    if (json.ok && Array.isArray(json.produtos) && json.produtos.length > 0) {
+      saveProducts(json.produtos);
+      refreshServicos();
+      renderProdutosList();
+    }
+  } catch(err) { console.warn('loadProductsFromSheets:', err.message); }
+}
+
 function refreshServicos() {
   const sel = document.getElementById('sv-servico');
   if (!sel) return;
@@ -2143,6 +2187,7 @@ function salvarProduto() {
   }
   prods.push({ nome, ticket });
   saveProducts(prods);
+  syncProductsToSheets(prods);
   document.getElementById('pp-nome').value   = '';
   document.getElementById('pp-ticket').value = '';
   const fb = document.getElementById('pp-fb');
@@ -2158,6 +2203,7 @@ function excluirProduto(idx) {
   const prods = getProducts();
   prods.splice(idx, 1);
   saveProducts(prods);
+  syncProductsToSheets(prods);
   refreshServicos();
   renderProdutosList();
   if (currentPage === 'produtos') renderProdutos();
@@ -2178,14 +2224,15 @@ function overlayClose(e, type) {
   if (e.target === e.currentTarget) closeModal(type);
 }
 
-// Init produtos
+// Init produtos (local cache primeiro, depois sincroniza com Sheets)
 refreshServicos();
 
 // Renderiza imediatamente com dados locais (rápido)
 render();
 
-// Em background: carrega vendas da planilha e atualiza tudo
+// Em background: carrega vendas e produtos da planilha
 loadSalesFromSheets();
+loadProductsFromSheets();
 
 // ── RESIZE: garante que charts.js redimensione quando o layout muda ──────────
 // Necessário porque o CSS Grid muda de 2→1 coluna no mobile e charts.js
