@@ -6,6 +6,7 @@
   <title>Elite Assessoria · Dashboard de Performance</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <!-- Remix Icons: embedded SVG sprite below -->
   <style>
     :root {
       --navy:      #081245;
@@ -135,7 +136,20 @@
     .kpi.teal::before   { background: #2dd4bf; }
     .kpi.orange::before { background: #fb923c; }
 
-    .kpi-icon  { font-size: 20px; margin-bottom: 10px; display: block; }
+    .kpi-icon  { font-size: 20px; margin-bottom: 10px; display: block; line-height: 1; }
+    .kpi-icon svg.ri { width: 22px; height: 22px; display: block; }
+
+    /* ── Remix Icons (inline SVG) global helpers ── */
+    svg.ri { fill: currentColor; display: inline-block; vertical-align: middle; overflow: visible; flex-shrink: 0; }
+    .section-label svg.ri  { width: 13px; height: 13px; margin-right: 3px; opacity: 0.9; }
+    .card-title svg.ri     { width: 14px; height: 14px; margin-right: 4px; opacity: 0.9; }
+    .btn-action svg.ri     { width: 15px; height: 15px; }
+    .page-btn svg.ri       { width: 13px; height: 13px; margin-right: 4px; }
+    .modal-title svg.ri    { width: 16px; height: 16px; margin-right: 5px; }
+    .dp-icon svg.ri        { width: 15px; height: 15px; }
+    .modal-close svg.ri    { width: 16px; height: 16px; }
+    [onclick*="limparFiltros"] svg.ri { width: 12px; height: 12px; }
+    [onclick*="exportarCSV"] svg.ri   { width: 14px; height: 14px; margin-right: 2px; }
     .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--white40); margin-bottom: 6px; }
     .kpi-value { font-size: 22px; font-weight: 900; color: var(--white); line-height: 1; }
     .kpi-value.lg { font-size: 26px; }
@@ -685,6 +699,59 @@
   </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="ri-add-circle-line" viewBox="0 0 24 24"><path d="M11 11V7H13V11H17V13H13V17H11V13H7V11H11ZM12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"/></symbol>
+<symbol id="ri-award-line" viewBox="0 0 24 24"><path d="M17 15.2454V22.1169C17 22.393 16.7761 22.617 16.5 22.617C16.4094 22.617 16.3205 22.5923 16.2428 22.5457L12 20L7.75725 22.5457C7.52046 22.6877 7.21333 22.6109 7.07125 22.3742C7.02463 22.2964 7 22.2075 7 22.1169V15.2454C5.17107 13.7793 4 11.5264 4 9C4 4.58172 7.58172 1 12 1C16.4183 1 20 4.58172 20 9C20 11.5264 18.8289 13.7793 17 15.2454ZM9 16.4185V19.4676L12 17.6676L15 19.4676V16.4185C14.0736 16.7935 13.0609 17 12 17C10.9391 17 9.92643 16.7935 9 16.4185ZM12 15C15.3137 15 18 12.3137 18 9C18 5.68629 15.3137 3 12 3C8.68629 3 6 5.68629 6 9C6 12.3137 8.68629 15 12 15Z"/></symbol>
+<symbol id="ri-bar-chart-box-line" viewBox="0 0 24 24"><path d="M3 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3ZM4 5V19H20V5H4ZM7 13H9V17H7V13ZM11 7H13V17H11V7ZM15 10H17V17H15V10Z"/></symbol>
+<symbol id="ri-bar-chart-grouped-line" viewBox="0 0 24 24"><path d="M2 12H4V21H2V12ZM5 14H7V21H5V14ZM16 8H18V21H16V8ZM19 10H21V21H19V10ZM9 2H11V21H9V2ZM12 4H14V21H12V4Z"/></symbol>
+<symbol id="ri-bar-chart-horizontal-line" viewBox="0 0 24 24"><path d="M12 3V5H3V3H12ZM16 19V21H3V19H16ZM22 11V13H3V11H22Z"/></symbol>
+<symbol id="ri-box-3-line" viewBox="0 0 24 24"><path d="M12 1L21.5 6.5V17.5L12 23L2.5 17.5V6.5L12 1ZM5.49388 7.0777L12.0001 10.8444L18.5062 7.07774L12 3.311L5.49388 7.0777ZM4.5 8.81329V16.3469L11.0001 20.1101V12.5765L4.5 8.81329ZM13.0001 20.11L19.5 16.3469V8.81337L13.0001 12.5765V20.11Z"/></symbol>
+<symbol id="ri-briefcase-4-line" viewBox="0 0 24 24"><path d="M7 5V2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2V5H21C21.5523 5 22 5.44772 22 6V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V6C2 5.44772 2.44772 5 3 5H7ZM9 13H4V19H20V13H15V16H9V13ZM20 7H4V11H9V9H15V11H20V7ZM11 11V14H13V11H11ZM9 3V5H15V3H9Z"/></symbol>
+<symbol id="ri-broadcast-line" viewBox="0 0 24 24"><path d="M4.92893 2.92896L6.34315 4.34317C4.89543 5.79088 4 7.79088 4 10C4 12.2092 4.89543 14.2092 6.34315 15.6569L4.92893 17.0711C3.11929 15.2614 2 12.7614 2 10C2 7.2386 3.11929 4.7386 4.92893 2.92896ZM19.0711 2.92896C20.8807 4.7386 22 7.2386 22 10C22 12.7614 20.8807 15.2614 19.0711 17.0711L17.6569 15.6569C19.1046 14.2092 20 12.2092 20 10C20 7.79088 19.1046 5.79088 17.6569 4.34317L19.0711 2.92896ZM7.75736 5.75738L9.17157 7.1716C8.44771 7.89545 8 8.89545 8 10C8 11.1046 8.44771 12.1046 9.17157 12.8285L7.75736 14.2427C6.67157 13.1569 6 11.6569 6 10C6 8.34317 6.67157 6.84317 7.75736 5.75738ZM16.2426 5.75738C17.3284 6.84317 18 8.34317 18 10C18 11.6569 17.3284 13.1569 16.2426 14.2427L14.8284 12.8285C15.5523 12.1046 16 11.1046 16 10C16 8.89545 15.5523 7.89545 14.8284 7.1716L16.2426 5.75738ZM12 12C10.8954 12 10 11.1046 10 10C10 8.89545 10.8954 8.00002 12 8.00002C13.1046 8.00002 14 8.89545 14 10C14 11.1046 13.1046 12 12 12ZM11 14H13V22H11V14Z"/></symbol>
+<symbol id="ri-calendar-2-line" viewBox="0 0 24 24"><path d="M9 1V3H15V1H17V3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H7V1H9ZM20 11H4V19H20V11ZM8 13V15H6V13H8ZM13 13V15H11V13H13ZM18 13V15H16V13H18ZM7 5H4V9H20V5H17V7H15V5H9V7H7V5Z"/></symbol>
+<symbol id="ri-check-circle-line" viewBox="0 0 24 24"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11.0026 16L6.75999 11.7574L8.17421 10.3431L11.0026 13.1716L16.6595 7.51472L18.0737 8.92893L11.0026 16Z"/></symbol>
+<symbol id="ri-check-line" viewBox="0 0 24 24"><path d="M9.9997 15.1709L19.1921 5.97852L20.6063 7.39273L9.9997 17.9993L3.63574 11.6354L5.04996 10.2212L9.9997 15.1709Z"/></symbol>
+<symbol id="ri-checkbox-circle-fill" viewBox="0 0 24 24"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM11.0026 16L18.0737 8.92893L16.6595 7.51472L11.0026 13.1716L8.17421 10.3431L6.75999 11.7574L11.0026 16Z"/></symbol>
+<symbol id="ri-circle-line" viewBox="0 0 24 24"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"/></symbol>
+<symbol id="ri-close-line" viewBox="0 0 24 24"><path d="M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z"/></symbol>
+<symbol id="ri-coin-line" viewBox="0 0 24 24"><path d="M12.0049 4.00275C18.08 4.00275 23.0049 6.68904 23.0049 10.0027V14.0027C23.0049 17.3165 18.08 20.0027 12.0049 20.0027C6.03824 20.0027 1.18114 17.4115 1.00957 14.1797L1.00488 14.0027V10.0027C1.00488 6.68904 5.92975 4.00275 12.0049 4.00275ZM12.0049 16.0027C8.28443 16.0027 4.99537 14.9953 3.00466 13.4532L3.00488 14.0027C3.00488 15.8849 6.88751 18.0027 12.0049 18.0027C17.0156 18.0027 20.8426 15.9723 20.9999 14.1207L21.0049 14.0027L21.0061 13.4524C19.0155 14.9949 15.726 16.0027 12.0049 16.0027ZM12.0049 6.00275C6.88751 6.00275 3.00488 8.12054 3.00488 10.0027C3.00488 11.8849 6.88751 14.0027 12.0049 14.0027C17.1223 14.0027 21.0049 11.8849 21.0049 10.0027C21.0049 8.12054 17.1223 6.00275 12.0049 6.00275Z"/></symbol>
+<symbol id="ri-coins-line" viewBox="0 0 24 24"><path d="M14.0049 2.00281C18.4232 2.00281 22.0049 5.58453 22.0049 10.0028C22.0049 13.2474 20.0733 16.0409 17.2973 17.296C16.0422 20.0718 13.249 22.0028 10.0049 22.0028C5.5866 22.0028 2.00488 18.4211 2.00488 14.0028C2.00488 10.7587 3.9359 7.96554 6.71122 6.71012C7.96681 3.93438 10.7603 2.00281 14.0049 2.00281ZM10.0049 8.00281C6.69117 8.00281 4.00488 10.6891 4.00488 14.0028C4.00488 17.3165 6.69117 20.0028 10.0049 20.0028C13.3186 20.0028 16.0049 17.3165 16.0049 14.0028C16.0049 10.6891 13.3186 8.00281 10.0049 8.00281ZM11.0049 9.00281V10.0028H13.0049V12.0028H9.00488C8.72874 12.0028 8.50488 12.2267 8.50488 12.5028C8.50488 12.7483 8.68176 12.9524 8.91501 12.9948L9.00488 13.0028H11.0049C12.3856 13.0028 13.5049 14.1221 13.5049 15.5028C13.5049 16.8835 12.3856 18.0028 11.0049 18.0028V19.0028H9.00488V18.0028H7.00488V16.0028H11.0049C11.281 16.0028 11.5049 15.7789 11.5049 15.5028C11.5049 15.2573 11.328 15.0532 11.0948 15.0109L11.0049 15.0028H9.00488C7.62417 15.0028 6.50488 13.8835 6.50488 12.5028C6.50488 11.1221 7.62417 10.0028 9.00488 10.0028V9.00281H11.0049ZM14.0049 4.00281C12.2214 4.00281 10.6196 4.78097 9.52064 6.01629C9.68133 6.00764 9.84254 6.00281 10.0049 6.00281C14.4232 6.00281 18.0049 9.58453 18.0049 14.0028C18.0049 14.1655 18 14.327 17.9905 14.4873C19.2265 13.3885 20.0049 11.7866 20.0049 10.0028C20.0049 6.6891 17.3186 4.00281 14.0049 4.00281Z"/></symbol>
+<symbol id="ri-cursor-line" viewBox="0 0 24 24"><path d="M15.3873 13.4975L17.9403 20.5117L13.2418 22.2218L10.6889 15.2076L6.79004 17.6529L8.4086 1.63318L19.9457 12.8646L15.3873 13.4975ZM15.3768 19.3163L12.6618 11.8568L15.6212 11.4459L9.98201 5.9561L9.19088 13.7863L11.7221 12.1988L14.4371 19.6583L15.3768 19.3163Z"/></symbol>
+<symbol id="ri-dashboard-line" viewBox="0 0 24 24"><path d="M14 21C13.4477 21 13 20.5523 13 20V12C13 11.4477 13.4477 11 14 11H20C20.5523 11 21 11.4477 21 12V20C21 20.5523 20.5523 21 20 21H14ZM4 13C3.44772 13 3 12.5523 3 12V4C3 3.44772 3.44772 3 4 3H10C10.5523 3 11 3.44772 11 4V12C11 12.5523 10.5523 13 10 13H4ZM9 11V5H5V11H9ZM4 21C3.44772 21 3 20.5523 3 20V16C3 15.4477 3.44772 15 4 15H10C10.5523 15 11 15.4477 11 16V20C11 20.5523 10.5523 21 10 21H4ZM5 19H9V17H5V19ZM15 19H19V13H15V19ZM13 4C13 3.44772 13.4477 3 14 3H20C20.5523 3 21 3.44772 21 4V8C21 8.55228 20.5523 9 20 9H14C13.4477 9 13 8.55228 13 8V4ZM15 5V7H19V5H15Z"/></symbol>
+<symbol id="ri-delete-bin-6-line" viewBox="0 0 24 24"><path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"/></symbol>
+<symbol id="ri-download-2-line" viewBox="0 0 24 24"><path d="M13 10H18L12 16L6 10H11V3H13V10ZM4 19H20V12H22V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V12H4V19Z"/></symbol>
+<symbol id="ri-edit-line" viewBox="0 0 24 24"><path d="M6.41421 15.89L16.5563 5.74785L15.1421 4.33363L5 14.4758V15.89H6.41421ZM7.24264 17.89H3V13.6473L14.435 2.21231C14.8256 1.82179 15.4587 1.82179 15.8492 2.21231L18.6777 5.04074C19.0682 5.43126 19.0682 6.06443 18.6777 6.45495L7.24264 17.89ZM3 19.89H21V21.89H3V19.89Z"/></symbol>
+<symbol id="ri-error-warning-line" viewBox="0 0 24 24"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z"/></symbol>
+<symbol id="ri-eye-line" viewBox="0 0 24 24"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"/></symbol>
+<symbol id="ri-file-list-3-line" viewBox="0 0 24 24"><path d="M19 22H5C3.34315 22 2 20.6569 2 19V3C2 2.44772 2.44772 2 3 2H17C17.5523 2 18 2.44772 18 3V15H22V19C22 20.6569 20.6569 22 19 22ZM18 17V19C18 19.5523 18.4477 20 19 20C19.5523 20 20 19.5523 20 19V17H18ZM16 20V4H4V19C4 19.5523 4.44772 20 5 20H16ZM6 7H14V9H6V7ZM6 11H14V13H6V11ZM6 15H11V17H6V15Z"/></symbol>
+<symbol id="ri-filter-3-line" viewBox="0 0 24 24"><path d="M10 18H14V16H10V18ZM3 6V8H21V6H3ZM6 13H18V11H6V13Z"/></symbol>
+<symbol id="ri-funds-line" viewBox="0 0 24 24"><path d="M4.41085 14.5258L7.81249 11.1241L10.6409 13.9526L13.7978 10.7957L12.0049 9.00281H17.0049V14.0028L15.212 12.2099L10.6409 16.781L7.81249 13.9526L5.33834 16.4267C6.77158 18.5822 9.22233 20.0028 12.0049 20.0028C16.4232 20.0028 20.0049 16.4211 20.0049 12.0028C20.0049 7.58453 16.4232 4.00281 12.0049 4.00281C7.5866 4.00281 4.00488 7.58453 4.00488 12.0028C4.00488 12.8844 4.14747 13.7326 4.41085 14.5258ZM2.87288 16.084L2.86275 16.0739L2.86662 16.07C2.31276 14.8274 2.00488 13.4511 2.00488 12.0028C2.00488 6.47996 6.48204 2.00281 12.0049 2.00281C17.5277 2.00281 22.0049 6.47996 22.0049 12.0028C22.0049 17.5257 17.5277 22.0028 12.0049 22.0028C7.93574 22.0028 4.43426 19.5724 2.87288 16.084Z"/></symbol>
+<symbol id="ri-group-line" viewBox="0 0 24 24"><path d="M2 22C2 17.5817 5.58172 14 10 14C14.4183 14 18 17.5817 18 22H16C16 18.6863 13.3137 16 10 16C6.68629 16 4 18.6863 4 22H2ZM10 13C6.685 13 4 10.315 4 7C4 3.685 6.685 1 10 1C13.315 1 16 3.685 16 7C16 10.315 13.315 13 10 13ZM10 11C12.21 11 14 9.21 14 7C14 4.79 12.21 3 10 3C7.79 3 6 4.79 6 7C6 9.21 7.79 11 10 11ZM18.2837 14.7028C21.0644 15.9561 23 18.752 23 22H21C21 19.564 19.5483 17.4671 17.4628 16.5271L18.2837 14.7028ZM17.5962 3.41321C19.5944 4.23703 21 6.20361 21 8.5C21 11.3702 18.8042 13.7252 16 13.9776V11.9646C17.6967 11.7222 19 10.264 19 8.5C19 7.11935 18.2016 5.92603 17.041 5.35635L17.5962 3.41321Z"/></symbol>
+<symbol id="ri-handshake-line" viewBox="0 0 24 24"><path d="M11.8611 2.39057C12.8495 1.73163 14.1336 1.71797 15.1358 2.35573L19.291 4.99994H20.9998C21.5521 4.99994 21.9998 5.44766 21.9998 5.99994V14.9999C21.9998 15.5522 21.5521 15.9999 20.9998 15.9999H19.4801C19.5396 16.9472 19.0933 17.9102 18.1955 18.4489L13.1021 21.505C12.4591 21.8907 11.6609 21.8817 11.0314 21.4974C10.3311 22.1167 9.2531 22.1849 8.47104 21.5704L3.33028 17.5312C2.56387 16.9291 2.37006 15.9003 2.76579 15.0847C2.28248 14.7057 2 14.1254 2 13.5109V6C2 5.44772 2.44772 5 3 5H7.94693L11.8611 2.39057ZM4.17264 13.6452L4.86467 13.0397C6.09488 11.9632 7.96042 12.0698 9.06001 13.2794L11.7622 16.2518C12.6317 17.2083 12.7903 18.6135 12.1579 19.739L17.1665 16.7339C17.4479 16.5651 17.5497 16.2276 17.4448 15.9433L13.0177 9.74551C12.769 9.39736 12.3264 9.24598 11.9166 9.36892L9.43135 10.1145C8.37425 10.4316 7.22838 10.1427 6.44799 9.36235L6.15522 9.06958C5.58721 8.50157 5.44032 7.69318 5.67935 7H4V13.5109L4.17264 13.6452ZM14.0621 4.04306C13.728 3.83047 13.3 3.83502 12.9705 4.05467L7.56943 7.65537L7.8622 7.94814C8.12233 8.20827 8.50429 8.30456 8.85666 8.19885L11.3419 7.45327C12.5713 7.08445 13.8992 7.53859 14.6452 8.58303L18.5144 13.9999H19.9998V6.99994H19.291C18.9106 6.99994 18.5381 6.89148 18.2172 6.68727L14.0621 4.04306ZM6.18168 14.5448L4.56593 15.9586L9.70669 19.9978L10.4106 18.7659C10.6256 18.3897 10.5738 17.9178 10.2823 17.5971L7.58013 14.6247C7.2136 14.2215 6.59175 14.186 6.18168 14.5448Z"/></symbol>
+<symbol id="ri-layout-grid-line" viewBox="0 0 24 24"><path d="M21 3C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H21ZM11 13H4V19H11V13ZM20 13H13V19H20V13ZM11 5H4V11H11V5ZM20 5H13V11H20V5Z"/></symbol>
+<symbol id="ri-line-chart-line" viewBox="0 0 24 24"><path d="M5 3V19H21V21H3V3H5ZM20.2929 6.29289L21.7071 7.70711L16 13.4142L13 10.415L8.70711 14.7071L7.29289 13.2929L13 7.58579L16 10.585L20.2929 6.29289Z"/></symbol>
+<symbol id="ri-loader-4-line" viewBox="0 0 24 24"><path d="M18.364 5.63604L16.9497 7.05025C15.683 5.7835 13.933 5 12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19C15.866 19 19 15.866 19 12H21C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C14.4853 3 16.7353 4.00736 18.364 5.63604Z"/></symbol>
+<symbol id="ri-megaphone-line" viewBox="0 0 24 24"><path d="M9 17C9 17 16 18 19 21H20C20.5523 21 21 20.5523 21 20V13.937C21.8626 13.715 22.5 12.9319 22.5 12C22.5 11.0681 21.8626 10.285 21 10.063V4C21 3.44772 20.5523 3 20 3H19C16 6 9 7 9 7H5C3.89543 7 3 7.89543 3 9V15C3 16.1046 3.89543 17 5 17H6L7 22H9V17ZM11 8.6612C11.6833 8.5146 12.5275 8.31193 13.4393 8.04373C15.1175 7.55014 17.25 6.77262 19 5.57458V18.4254C17.25 17.2274 15.1175 16.4499 13.4393 15.9563C12.5275 15.6881 11.6833 15.4854 11 15.3388V8.6612ZM5 9H9V15H5V9Z"/></symbol>
+<symbol id="ri-message-2-line" viewBox="0 0 24 24"><path d="M6.45455 19L2 22.5V4C2 3.44772 2.44772 3 3 3H21C21.5523 3 22 3.44772 22 4V18C22 18.5523 21.5523 19 21 19H6.45455ZM5.76282 17H20V5H4V18.3851L5.76282 17ZM11 10H13V12H11V10ZM7 10H9V12H7V10ZM15 10H17V12H15V10Z"/></symbol>
+<symbol id="ri-money-dollar-circle-line" viewBox="0 0 24 24"><path d="M12.0049 22.0027C6.48204 22.0027 2.00488 17.5256 2.00488 12.0027C2.00488 6.4799 6.48204 2.00275 12.0049 2.00275C17.5277 2.00275 22.0049 6.4799 22.0049 12.0027C22.0049 17.5256 17.5277 22.0027 12.0049 22.0027ZM12.0049 20.0027C16.4232 20.0027 20.0049 16.421 20.0049 12.0027C20.0049 7.58447 16.4232 4.00275 12.0049 4.00275C7.5866 4.00275 4.00488 7.58447 4.00488 12.0027C4.00488 16.421 7.5866 20.0027 12.0049 20.0027ZM8.50488 14.0027H14.0049C14.281 14.0027 14.5049 13.7789 14.5049 13.5027C14.5049 13.2266 14.281 13.0027 14.0049 13.0027H10.0049C8.62417 13.0027 7.50488 11.8835 7.50488 10.5027C7.50488 9.12203 8.62417 8.00275 10.0049 8.00275H11.0049V6.00275H13.0049V8.00275H15.5049V10.0027H10.0049C9.72874 10.0027 9.50488 10.2266 9.50488 10.5027C9.50488 10.7789 9.72874 11.0027 10.0049 11.0027H14.0049C15.3856 11.0027 16.5049 12.122 16.5049 13.5027C16.5049 14.8835 15.3856 16.0027 14.0049 16.0027H13.0049V18.0027H11.0049V16.0027H8.50488V14.0027Z"/></symbol>
+<symbol id="ri-pencil-line" viewBox="0 0 24 24"><path d="M15.7279 9.57627L14.3137 8.16206L5 17.4758V18.89H6.41421L15.7279 9.57627ZM17.1421 8.16206L18.5563 6.74785L17.1421 5.33363L15.7279 6.74785L17.1421 8.16206ZM7.24264 20.89H3V16.6473L16.435 3.21231C16.8256 2.82179 17.4587 2.82179 17.8492 3.21231L20.6777 6.04074C21.0682 6.43126 21.0682 7.06443 20.6777 7.45495L7.24264 20.89Z"/></symbol>
+<symbol id="ri-pie-chart-2-line" viewBox="0 0 24 24"><path d="M12 0.5C18.3513 0.5 23.5 5.64873 23.5 12C23.5 12.3369 23.4855 12.6704 23.4571 13H21.9506C21.4489 18.0533 17.1853 22 12 22C6.47715 22 2 17.5228 2 12C2 6.81465 5.94668 2.5511 11 2.04938V0.542876C11.3296 0.514488 11.6631 0.5 12 0.5ZM11 4.06189C7.05369 4.55399 4 7.92038 4 12C4 16.4183 7.58172 20 12 20C16.0796 20 19.446 16.9463 19.9381 13H11V4.06189ZM13 2.552V11H21.448C20.9827 6.55197 17.448 3.01732 13 2.552Z"/></symbol>
+<symbol id="ri-pie-chart-line" viewBox="0 0 24 24"><path d="M9 2.4578V4.58152C6.06817 5.76829 4 8.64262 4 12C4 16.4183 7.58172 20 12 20C15.3574 20 18.2317 17.9318 19.4185 15H21.5422C20.2679 19.0571 16.4776 22 12 22C6.47715 22 2 17.5228 2 12C2 7.52236 4.94289 3.73207 9 2.4578ZM12 2C17.5228 2 22 6.47715 22 12C22 12.3375 21.9833 12.6711 21.9506 13H11V2.04938C11.3289 2.01672 11.6625 2 12 2ZM13 4.06189V11H19.9381C19.4869 7.38128 16.6187 4.51314 13 4.06189Z"/></symbol>
+<symbol id="ri-refresh-line" viewBox="0 0 24 24"><path d="M5.46257 4.43262C7.21556 2.91688 9.5007 2 12 2C17.5228 2 22 6.47715 22 12C22 14.1361 21.3302 16.1158 20.1892 17.7406L17 12H20C20 7.58172 16.4183 4 12 4C9.84982 4 7.89777 4.84827 6.46023 6.22842L5.46257 4.43262ZM18.5374 19.5674C16.7844 21.0831 14.4993 22 12 22C6.47715 22 2 17.5228 2 12C2 9.86386 2.66979 7.88416 3.8108 6.25944L7 12H4C4 16.4183 7.58172 20 12 20C14.1502 20 16.1022 19.1517 17.5398 17.7716L18.5374 19.5674Z"/></symbol>
+<symbol id="ri-repeat-line" viewBox="0 0 24 24"><path d="M6 4H21C21.5523 4 22 4.44772 22 5V12H20V6H6V9L1 5L6 1V4ZM18 20H3C2.44772 20 2 19.5523 2 19V12H4V18H18V15L23 19L18 23V20Z"/></symbol>
+<symbol id="ri-search-line" viewBox="0 0 24 24"><path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z"/></symbol>
+<symbol id="ri-shopping-cart-2-line" viewBox="0 0 24 24"><path d="M4.00436 6.41686L0.761719 3.17422L2.17593 1.76001L5.41857 5.00265H20.6603C21.2126 5.00265 21.6603 5.45037 21.6603 6.00265C21.6603 6.09997 21.6461 6.19678 21.6182 6.29L19.2182 14.29C19.0913 14.713 18.7019 15.0027 18.2603 15.0027H6.00436V17.0027H17.0044V19.0027H5.00436C4.45207 19.0027 4.00436 18.5549 4.00436 18.0027V6.41686ZM6.00436 7.00265V13.0027H17.5163L19.3163 7.00265H6.00436ZM5.50436 23.0027C4.67593 23.0027 4.00436 22.3311 4.00436 21.5027C4.00436 20.6742 4.67593 20.0027 5.50436 20.0027C6.33279 20.0027 7.00436 20.6742 7.00436 21.5027C7.00436 22.3311 6.33279 23.0027 5.50436 23.0027ZM17.5044 23.0027C16.6759 23.0027 16.0044 22.3311 16.0044 21.5027C16.0044 20.6742 16.6759 20.0027 17.5044 20.0027C18.3328 20.0027 19.0044 20.6742 19.0044 21.5027C19.0044 22.3311 18.3328 23.0027 17.5044 23.0027Z"/></symbol>
+<symbol id="ri-store-2-line" viewBox="0 0 24 24"><path d="M21 13.2422V20H22V22H2V20H3V13.2422C1.79401 12.435 1 11.0602 1 9.5C1 8.67286 1.22443 7.87621 1.63322 7.19746L4.3453 2.5C4.52393 2.1906 4.85406 2 5.21132 2H18.7887C19.1459 2 19.4761 2.1906 19.6547 2.5L22.3575 7.18172C22.7756 7.87621 23 8.67286 23 9.5C23 11.0602 22.206 12.435 21 13.2422ZM19 13.9725C18.8358 13.9907 18.669 14 18.5 14C17.2409 14 16.0789 13.478 15.25 12.6132C14.4211 13.478 13.2591 14 12 14C10.7409 14 9.5789 13.478 8.75 12.6132C7.9211 13.478 6.75911 14 5.5 14C5.331 14 5.16417 13.9907 5 13.9725V20H19V13.9725ZM5.78865 4L3.35598 8.21321C3.12409 8.59843 3 9.0389 3 9.5C3 10.8807 4.11929 12 5.5 12C6.53096 12 7.44467 11.3703 7.82179 10.4295C8.1574 9.59223 9.3426 9.59223 9.67821 10.4295C10.0553 11.3703 10.969 12 12 12C13.031 12 13.9447 11.3703 14.3218 10.4295C14.6574 9.59223 15.8426 9.59223 16.1782 10.4295C16.5553 11.3703 17.469 12 18.5 12C19.8807 12 21 10.8807 21 9.5C21 9.0389 20.8759 8.59843 20.6347 8.19746L18.2113 4H5.78865Z"/></symbol>
+<symbol id="ri-table-line" viewBox="0 0 24 24"><path d="M4 8H20V5H4V8ZM14 19V10H10V19H14ZM16 19H20V10H16V19ZM8 19V10H4V19H8ZM3 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3Z"/></symbol>
+<symbol id="ri-target-line" viewBox="0 0 24 24"><path d="M13 1L13.001 4.06201C16.6192 4.51365 19.4869 7.38163 19.9381 11L23 11V13L19.938 13.001C19.4864 16.6189 16.6189 19.4864 13.001 19.938L13 23H11L11 19.9381C7.38163 19.4869 4.51365 16.6192 4.06201 13.001L1 13V11L4.06189 11C4.51312 7.38129 7.38129 4.51312 11 4.06189L11 1H13ZM12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6ZM12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10Z"/></symbol>
+<symbol id="ri-team-line" viewBox="0 0 24 24"><path d="M12 11C14.7614 11 17 13.2386 17 16V22H15V16C15 14.4023 13.7511 13.0963 12.1763 13.0051L12 13C10.4023 13 9.09634 14.2489 9.00509 15.8237L9 16V22H7V16C7 13.2386 9.23858 11 12 11ZM5.5 14C5.77885 14 6.05009 14.0326 6.3101 14.0942C6.14202 14.594 6.03873 15.122 6.00896 15.6693L6 16L6.0007 16.0856C5.88757 16.0456 5.76821 16.0187 5.64446 16.0069L5.5 16C4.7203 16 4.07955 16.5949 4.00687 17.3555L4 17.5V22H2V17.5C2 15.567 3.567 14 5.5 14ZM18.5 14C20.433 14 22 15.567 22 17.5V22H20V17.5C20 16.7203 19.4051 16.0796 18.6445 16.0069L18.5 16C18.3248 16 18.1566 16.03 18.0003 16.0852L18 16C18 15.3343 17.8916 14.694 17.6915 14.0956C17.9499 14.0326 18.2211 14 18.5 14ZM5.5 8C6.88071 8 8 9.11929 8 10.5C8 11.8807 6.88071 13 5.5 13C4.11929 13 3 11.8807 3 10.5C3 9.11929 4.11929 8 5.5 8ZM18.5 8C19.8807 8 21 9.11929 21 10.5C21 11.8807 19.8807 13 18.5 13C17.1193 13 16 11.8807 16 10.5C16 9.11929 17.1193 8 18.5 8ZM5.5 10C5.22386 10 5 10.2239 5 10.5C5 10.7761 5.22386 11 5.5 11C5.77614 11 6 10.7761 6 10.5C6 10.2239 5.77614 10 5.5 10ZM18.5 10C18.2239 10 18 10.2239 18 10.5C18 10.7761 18.2239 11 18.5 11C18.7761 11 19 10.7761 19 10.5C19 10.2239 18.7761 10 18.5 10ZM12 2C14.2091 2 16 3.79086 16 6C16 8.20914 14.2091 10 12 10C9.79086 10 8 8.20914 8 6C8 3.79086 9.79086 2 12 2ZM12 4C10.8954 4 10 4.89543 10 6C10 7.10457 10.8954 8 12 8C13.1046 8 14 7.10457 14 6C14 4.89543 13.1046 4 12 4Z"/></symbol>
+<symbol id="ri-trophy-line" viewBox="0 0 24 24"><path d="M13.0049 16.9409V19.0027H18.0049V21.0027H6.00488V19.0027H11.0049V16.9409C7.05857 16.4488 4.00488 13.0824 4.00488 9.00275V3.00275H20.0049V9.00275C20.0049 13.0824 16.9512 16.4488 13.0049 16.9409ZM6.00488 5.00275V9.00275C6.00488 12.3165 8.69117 15.0027 12.0049 15.0027C15.3186 15.0027 18.0049 12.3165 18.0049 9.00275V5.00275H6.00488ZM1.00488 5.00275H3.00488V9.00275H1.00488V5.00275ZM21.0049 5.00275H23.0049V9.00275H21.0049V5.00275Z"/></symbol>
+<symbol id="ri-user-3-line" viewBox="0 0 24 24"><path d="M20 22H18V20C18 18.3431 16.6569 17 15 17H9C7.34315 17 6 18.3431 6 20V22H4V20C4 17.2386 6.23858 15 9 15H15C17.7614 15 20 17.2386 20 20V22ZM12 13C8.68629 13 6 10.3137 6 7C6 3.68629 8.68629 1 12 1C15.3137 1 18 3.68629 18 7C18 10.3137 15.3137 13 12 13ZM12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"/></symbol>
+<symbol id="ri-user-add-line" viewBox="0 0 24 24"><path d="M14 14.252V16.3414C13.3744 16.1203 12.7013 16 12 16C8.68629 16 6 18.6863 6 22H4C4 17.5817 7.58172 14 12 14C12.6906 14 13.3608 14.0875 14 14.252ZM12 13C8.685 13 6 10.315 6 7C6 3.685 8.685 1 12 1C15.315 1 18 3.685 18 7C18 10.315 15.315 13 12 13ZM12 11C14.21 11 16 9.21 16 7C16 4.79 14.21 3 12 3C9.79 3 8 4.79 8 7C8 9.21 9.79 11 12 11ZM18 17V14H20V17H23V19H20V22H18V19H15V17H18Z"/></symbol>
+<symbol id="ri-user-star-line" viewBox="0 0 24 24"><path d="M12 14V16C8.68629 16 6 18.6863 6 22H4C4 17.5817 7.58172 14 12 14ZM12 13C8.685 13 6 10.315 6 7C6 3.685 8.685 1 12 1C15.315 1 18 3.685 18 7C18 10.315 15.315 13 12 13ZM12 11C14.21 11 16 9.21 16 7C16 4.79 14.21 3 12 3C9.79 3 8 4.79 8 7C8 9.21 9.79 11 12 11ZM18 21.5L15.0611 23.0451L15.6224 19.7725L13.2447 17.4549L16.5305 16.9775L18 14L19.4695 16.9775L22.7553 17.4549L20.3776 19.7725L20.9389 23.0451L18 21.5Z"/></symbol>
+<symbol id="ri-wifi-line" viewBox="0 0 24 24"><path d="M0.689453 6.99659C3.78027 4.49704 7.71526 3 11.9999 3C16.2845 3 20.2195 4.49704 23.3104 6.99659L22.0536 8.55252C19.3062 6.3307 15.8085 5 11.9999 5C8.19133 5 4.69356 6.3307 1.94617 8.55252L0.689453 6.99659ZM3.83124 10.8864C6.0635 9.08119 8.90544 8 11.9999 8C15.0944 8 17.9363 9.08119 20.1686 10.8864L18.9118 12.4424C17.023 10.9149 14.6183 10 11.9999 10C9.38151 10 6.97679 10.9149 5.08796 12.4424L3.83124 10.8864ZM6.97304 14.7763C8.34673 13.6653 10.0956 13 11.9999 13C13.9042 13 15.6531 13.6653 17.0268 14.7763L15.7701 16.3322C14.7398 15.499 13.4281 15 11.9999 15C10.5717 15 9.26002 15.499 8.22975 16.3322L6.97304 14.7763ZM10.1148 18.6661C10.63 18.2495 11.2858 18 11.9999 18C12.714 18 13.3698 18.2495 13.885 18.6661L11.9999 21L10.1148 18.6661Z"/></symbol>
+<symbol id="ri-wifi-off-line" viewBox="0 0 24 24"><path d="M12.0001 18C12.7144 18 13.3704 18.2497 13.8856 18.6665L12.0001 21L10.1145 18.6665C10.6297 18.2497 11.2857 18 12.0001 18ZM2.80766 1.39343L20.4853 19.0711L19.0711 20.4853L13.8913 15.3042C13.2967 15.1069 12.6609 15 12.0001 15C10.5719 15 9.26024 15.499 8.22998 16.3322L6.97363 14.7759C8.24961 13.7442 9.84925 13.0969 11.5964 13.01L9.00025 10.414C7.55273 10.8234 6.22651 11.5217 5.0878 12.4426L3.83099 10.8868C4.89946 10.0226 6.10763 9.32438 7.41633 8.83118L5.13168 6.5451C3.98878 7.08913 2.92058 7.76472 1.94666 8.55228L0.689453 6.99674C1.60358 6.25747 2.59156 5.60589 3.64058 5.05479L1.39345 2.80765L2.80766 1.39343ZM14.5004 10.2854L12.2165 8.00243L12 8C15.0947 8 17.9369 9.08141 20.1693 10.8869L18.9123 12.4426C17.6438 11.4167 16.1427 10.6672 14.5004 10.2854ZM12.0001 3.00003C16.2849 3.00003 20.22 4.49719 23.3109 6.99691L22.0534 8.55228C19.3061 6.33062 15.8085 5.00003 12.0001 5.00003C11.122 5.00003 10.2604 5.07077 9.42075 5.20685L7.72455 3.51088C9.09498 3.17702 10.5268 3.00003 12.0001 3.00003Z"/></symbol>
+</svg>
 
 <div class="topbar">
   <div class="dot"></div>
@@ -710,21 +777,21 @@
 
 <!-- PAGE NAVIGATION -->
 <nav class="page-nav">
-  <button class="page-btn active" onclick="setPage('geral',this)">📊 Visão Geral</button>
-  <button class="page-btn" onclick="setPage('produtos',this)">📦 Por Produto</button>
+  <button class="page-btn active" onclick="setPage('geral',this)"><svg class="ri ri-layout-grid-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-layout-grid-line"/></svg> Visão Geral</button>
+  <button class="page-btn" onclick="setPage('produtos',this)"><svg class="ri ri-box-3-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-box-3-line"/></svg> Por Produto</button>
 </nav>
 
 <!-- DATE RANGE PICKER -->
 <div class="datepicker-bar" id="dp-bar">
   <div class="dp-trigger" id="dp-trigger" onclick="togglePicker()">
-    <span class="dp-icon">📅</span>
+    <span class="dp-icon"><svg class="ri ri-calendar-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-calendar-2-line"/></svg></span>
     <span id="dp-label" class="dp-label-range">carregando…</span>
     <span class="dp-arrow">▾</span>
   </div>
-  <button class="btn-action btn-venda" onclick="openModal('venda')">💰 <span class="btn-label">Registrar Venda</span></button>
-  <button class="btn-action btn-produto" onclick="openModal('produto')">📦 <span class="btn-label">Registrar Produto</span></button>
-  <button class="btn-action btn-closer" onclick="openCloserModal()">👤 <span class="btn-label">Registrar Closer</span></button>
-  <button class="btn-action btn-refresh" id="btn-refresh" onclick="refreshDashboard()" title="Atualizar dados da planilha"><i class="ri">🔄</i></button>
+  <button class="btn-action btn-venda" onclick="openModal('venda')"><svg class="ri ri-add-circle-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-add-circle-line"/></svg> <span class="btn-label">Registrar Venda</span></button>
+  <button class="btn-action btn-produto" onclick="openModal('produto')"><svg class="ri ri-box-3-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-box-3-line"/></svg> <span class="btn-label">Registrar Produto</span></button>
+  <button class="btn-action btn-closer" onclick="openCloserModal()"><svg class="ri ri-user-add-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-user-add-line"/></svg> <span class="btn-label">Registrar Closer</span></button>
+  <button class="btn-action btn-refresh" id="btn-refresh" onclick="refreshDashboard()" title="Atualizar dados da planilha"><svg class="ri ri-refresh-line ri" viewBox="0 0 24 24" aria-hidden="true" style="width:17px;height:17px"><use href="#ri-refresh-line"/></svg></button>
   <div class="dp-panel" id="dp-panel">
     <div class="dp-body">
       <!-- presets -->
@@ -759,22 +826,22 @@
   <div id="page-geral" class="active">
 
   <!-- ── BLOCO 1: INVESTIMENTO ─────────────────────────────── -->
-  <div class="section-label">💸 Investimento</div>
+  <div class="section-label"><svg class="ri ri-funds-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-funds-line"/></svg> Investimento</div>
   <div class="kpi-group cols-3 kpi-row-gap">
     <div class="kpi red">
-      <span class="kpi-icon">💸</span>
+      <span class="kpi-icon"><svg class="ri ri-funds-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-funds-line"/></svg></span>
       <div class="kpi-label">Investimento Total</div>
       <div class="kpi-value lg" id="kpi-invest-total">—</div>
       <div class="kpi-sub">Tráfego pago no período</div>
     </div>
     <div class="kpi orange">
-      <span class="kpi-icon">🎯</span>
+      <span class="kpi-icon"><svg class="ri ri-target-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-target-line"/></svg></span>
       <div class="kpi-label">Invest. Leads / Vendas</div>
       <div class="kpi-value" id="kpi-invest-leads">—</div>
       <div class="kpi-sub">Campanhas de conversão</div>
     </div>
     <div class="kpi purple">
-      <span class="kpi-icon">📣</span>
+      <span class="kpi-icon"><svg class="ri ri-megaphone-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-megaphone-line"/></svg></span>
       <div class="kpi-label">Invest. Branding</div>
       <div class="kpi-value" id="kpi-invest-brand">—</div>
       <div class="kpi-sub">Branding e processo seletivo</div>
@@ -782,30 +849,30 @@
   </div>
 
   <!-- ── BLOCO 2: VENDAS ───────────────────────────────────── -->
-  <div class="section-label">🎯 Vendas</div>
+  <div class="section-label"><svg class="ri ri-store-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-store-2-line"/></svg> Vendas</div>
   <div class="kpi-group cols-4 kpi-row-gap">
     <div class="kpi cyan">
-      <span class="kpi-icon">🆕</span>
+      <span class="kpi-icon"><svg class="ri ri-user-add-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-user-add-line"/></svg></span>
       <div class="kpi-label">Vendas Novas</div>
       <div class="kpi-value lg" id="kpi-vendas-novas">—</div>
       <div class="kpi-sub">Novos clientes no período</div>
       <span class="kpi-tag tag-cyan">Leads convertidos</span>
     </div>
     <div class="kpi teal">
-      <span class="kpi-icon">🔁</span>
+      <span class="kpi-icon"><svg class="ri ri-repeat-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-repeat-line"/></svg></span>
       <div class="kpi-label">Vendas Recorrentes</div>
       <div class="kpi-value lg" id="kpi-vendas-rec">—</div>
       <div class="kpi-sub">Cobranças de vendas passadas</div>
       <span class="kpi-tag tag-cyan">Parcelamentos</span>
     </div>
     <div class="kpi blue">
-      <span class="kpi-icon">📊</span>
+      <span class="kpi-icon"><svg class="ri ri-pie-chart-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-pie-chart-2-line"/></svg></span>
       <div class="kpi-label">Taxa de Conversão</div>
       <div class="kpi-value" id="kpi-conv">—</div>
       <div class="kpi-sub" id="kpi-leads-sub">Leads no período: —</div>
     </div>
     <div class="kpi purple">
-      <span class="kpi-icon">💼</span>
+      <span class="kpi-icon"><svg class="ri ri-briefcase-4-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-briefcase-4-line"/></svg></span>
       <div class="kpi-label">Ticket Médio</div>
       <div class="kpi-value" id="kpi-ticket">—</div>
       <div class="kpi-sub">Por venda nova</div>
@@ -813,30 +880,30 @@
   </div>
 
   <!-- ── BLOCO 3: FATURAMENTO ──────────────────────────────── -->
-  <div class="section-label">💰 Faturamento</div>
+  <div class="section-label"><svg class="ri ri-coin-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-coin-line"/></svg> Faturamento</div>
   <div class="kpi-group cols-4 kpi-row-gap">
     <div class="kpi gold">
-      <span class="kpi-icon">🏆</span>
+      <span class="kpi-icon"><svg class="ri ri-trophy-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-trophy-line"/></svg></span>
       <div class="kpi-label">Faturamento Total</div>
       <div class="kpi-value lg" id="kpi-fat-total">—</div>
       <div class="kpi-sub">Novas + Recorrentes</div>
     </div>
     <div class="kpi green">
-      <span class="kpi-icon">🆕</span>
+      <span class="kpi-icon"><svg class="ri ri-user-add-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-user-add-line"/></svg></span>
       <div class="kpi-label">Faturamento Leads Novos</div>
       <div class="kpi-value" id="kpi-fat-novos">—</div>
       <div class="kpi-sub">Apenas vendas novas</div>
       <span class="kpi-tag tag-green">Novos clientes</span>
     </div>
     <div class="kpi teal">
-      <span class="kpi-icon">🔁</span>
+      <span class="kpi-icon"><svg class="ri ri-repeat-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-repeat-line"/></svg></span>
       <div class="kpi-label">Faturamento Recorrente</div>
       <div class="kpi-value" id="kpi-fat-rec">—</div>
       <div class="kpi-sub">Parcelamentos recebidos</div>
       <span class="kpi-tag tag-cyan">Carteira ativa</span>
     </div>
     <div class="kpi green">
-      <span class="kpi-icon">💵</span>
+      <span class="kpi-icon"><svg class="ri ri-money-dollar-circle-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-money-dollar-circle-line"/></svg></span>
       <div class="kpi-label">Lucro Bruto</div>
       <div class="kpi-value" id="kpi-lucro">—</div>
       <div class="kpi-sub">Faturamento − Investimento</div>
@@ -844,34 +911,34 @@
   </div>
 
   <!-- ── BLOCO 4: META ADS ─────────────────────────────────── -->
-  <div class="section-label">📡 Meta Ads</div>
+  <div class="section-label"><svg class="ri ri-broadcast-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-broadcast-line"/></svg> Meta Ads</div>
   <div class="kpi-group cols-5 kpi-row-gap" style="margin-bottom:24px">
     <div class="kpi gold">
-      <span class="kpi-icon">🏆</span>
+      <span class="kpi-icon"><svg class="ri ri-trophy-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-trophy-line"/></svg></span>
       <div class="kpi-label">ROAS</div>
       <div class="kpi-value lg" id="kpi-roas">—</div>
       <div class="kpi-sub">Retorno sobre investimento</div>
     </div>
     <div class="kpi red">
-      <span class="kpi-icon">💰</span>
+      <span class="kpi-icon"><svg class="ri ri-coin-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-coin-line"/></svg></span>
       <div class="kpi-label">CAC</div>
       <div class="kpi-value" id="kpi-cac">—</div>
       <div class="kpi-sub">Custo de aquisição</div>
     </div>
     <div class="kpi orange">
-      <span class="kpi-icon">💬</span>
+      <span class="kpi-icon"><svg class="ri ri-message-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-message-2-line"/></svg></span>
       <div class="kpi-label">CPL</div>
       <div class="kpi-value" id="kpi-cpl">—</div>
       <div class="kpi-sub">Custo por lead/mensagem</div>
     </div>
     <div class="kpi blue">
-      <span class="kpi-icon">👆</span>
+      <span class="kpi-icon"><svg class="ri ri-cursor-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-cursor-line"/></svg></span>
       <div class="kpi-label">CTR</div>
       <div class="kpi-value" id="kpi-ctr">—</div>
       <div class="kpi-sub">Taxa de cliques</div>
     </div>
     <div class="kpi cyan">
-      <span class="kpi-icon">📺</span>
+      <span class="kpi-icon"><svg class="ri ri-eye-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-eye-line"/></svg></span>
       <div class="kpi-label">CPM</div>
       <div class="kpi-value" id="kpi-cpm">—</div>
       <div class="kpi-sub">Custo por mil impressões</div>
@@ -879,50 +946,50 @@
   </div>
 
   <!-- ── GRÁFICOS ROW 1 ────────────────────────────────────── -->
-  <div class="section-label">📈 Evolução · Faturamento e Investimento</div>
+  <div class="section-label"><svg class="ri ri-line-chart-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-line-chart-line"/></svg> Evolução · Faturamento e Investimento</div>
   <div class="charts-2">
     <div class="card">
-      <div class="card-title">📈 Investimento × Faturamento por Dia</div>
+      <div class="card-title"><svg class="ri ri-line-chart-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-line-chart-line"/></svg> Investimento × Faturamento por Dia</div>
       <div class="card-sub">Faturamento Total (novas + recorrentes) vs investimento diário</div>
       <canvas id="chart-main" height="90"></canvas>
     </div>
     <div class="card">
-      <div class="card-title">🏆 ROAS Diário</div>
+      <div class="card-title"><svg class="ri ri-award-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-award-line"/></svg> ROAS Diário</div>
       <div class="card-sub">Linha verde = meta (5×) · Linha vermelha = break-even (1×)</div>
       <canvas id="chart-roas" height="90"></canvas>
     </div>
   </div>
 
   <!-- ── GRÁFICOS ROW 2 ────────────────────────────────────── -->
-  <div class="section-label">🎯 Vendas · Novas vs Recorrentes</div>
+  <div class="section-label"><svg class="ri ri-shopping-cart-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-shopping-cart-2-line"/></svg> Vendas · Novas vs Recorrentes</div>
   <div class="charts-2-eq">
     <div class="card">
-      <div class="card-title">🆕 Vendas Novas por Dia</div>
+      <div class="card-title"><svg class="ri ri-line-chart-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-line-chart-line"/></svg> Vendas Novas por Dia</div>
       <div class="card-sub">Novos clientes convertidos a partir de leads</div>
       <canvas id="chart-novas" height="110"></canvas>
     </div>
     <div class="card">
-      <div class="card-title">🔁 Faturamento: Novas vs Recorrentes</div>
+      <div class="card-title"><svg class="ri ri-repeat-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-repeat-line"/></svg> Faturamento: Novas vs Recorrentes</div>
       <div class="card-sub">Composição do faturamento diário por tipo de venda</div>
       <canvas id="chart-fat-split" height="110"></canvas>
     </div>
   </div>
 
   <!-- ── GRÁFICOS ROW 3 ────────────────────────────────────── -->
-  <div class="section-label">📡 Meta Ads · Performance</div>
+  <div class="section-label"><svg class="ri ri-bar-chart-box-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-bar-chart-box-line"/></svg> Meta Ads · Performance</div>
   <div class="charts-3">
     <div class="card">
-      <div class="card-title">💬 Leads por Dia</div>
+      <div class="card-title"><svg class="ri ri-message-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-message-2-line"/></svg> Leads por Dia</div>
       <div class="card-sub">Mensagens e leads gerados pelas campanhas</div>
       <canvas id="chart-leads" height="120"></canvas>
     </div>
     <div class="card">
-      <div class="card-title">📡 CTR e CPM</div>
+      <div class="card-title"><svg class="ri ri-wifi-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-wifi-line"/></svg> CTR e CPM</div>
       <div class="card-sub">Taxa de cliques · Custo por mil impressões</div>
       <canvas id="chart-ctr" height="120"></canvas>
     </div>
     <div class="card">
-      <div class="card-title">👥 Alcance e Impressões</div>
+      <div class="card-title"><svg class="ri ri-group-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-group-line"/></svg> Alcance e Impressões</div>
       <div class="card-sub">Pessoas impactadas pelas campanhas</div>
       <canvas id="chart-reach" height="120"></canvas>
     </div>
@@ -932,17 +999,17 @@
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
       <div>
-        <div class="card-title" style="margin-bottom:4px">📋 Histórico de Vendas</div>
+        <div class="card-title" style="margin-bottom:4px"><svg class="ri ri-file-list-3-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-file-list-3-line"/></svg> Histórico de Vendas</div>
         <div class="card-sub">Todas as vendas registradas (salvas no navegador) <span id="sync-status-vendas" style="display:none;margin-left:8px;font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:6px;padding:2px 8px"></span></div>
       </div>
-      <button onclick="exportarCSV()" style="background:rgba(240,192,64,0.15);border:1.5px solid rgba(240,192,64,0.4);color:var(--gold);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:Montserrat,sans-serif">📥 Exportar CSV</button>
+      <button onclick="exportarCSV()" style="background:rgba(240,192,64,0.15);border:1.5px solid rgba(240,192,64,0.4);color:var(--gold);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:Montserrat,sans-serif"><svg class="ri ri-download-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-download-2-line"/></svg> Exportar CSV</button>
     </div>
     <!-- Filtros da tabela -->
     <div id="venda-filters" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px;padding:14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border)">
       <div style="position:relative" id="fp-container">
         <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">Data</div>
         <div id="fp-trigger" onclick="fpToggle()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;cursor:pointer;color:#fff;user-select:none;transition:border-color 0.15s">
-          <span>📅</span>
+          <span><svg class="ri ri-calendar-2-line" viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px;vertical-align:middle"><use href="#ri-calendar-2-line"/></svg></span>
           <span id="fp-label" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Todas</span>
           <span id="fp-arrow" style="font-size:10px;color:var(--white40);transition:transform 0.2s">▾</span>
         </div>
@@ -957,7 +1024,7 @@
               <button class="dp-preset" onclick="fpPreset(30)">30 dias</button>
               <button class="dp-preset" onclick="fpPresetMonth('current')">Este mês</button>
               <button class="dp-preset" onclick="fpPresetMonth('last')">Mês anterior</button>
-              <button class="dp-preset" onclick="fpClear()" style="margin-top:6px;background:rgba(232,49,42,0.15);color:#f87171">✕ Limpar</button>
+              <button class="dp-preset" onclick="fpClear()" style="margin-top:6px;background:rgba(232,49,42,0.15);color:#f87171"><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-close-line"/></svg> Limpar</button>
             </div>
             <!-- Calendário -->
             <div style="padding:12px 14px;flex:1">
@@ -1012,7 +1079,7 @@
         </select>
       </div>
       <div style="display:flex;align-items:flex-end">
-        <button onclick="limparFiltros()" style="width:100%;background:rgba(232,49,42,0.12);border:1px solid rgba(232,49,42,0.3);color:#f87171;border-radius:7px;padding:6px 9px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif;cursor:pointer">✕ Limpar</button>
+        <button onclick="limparFiltros()" style="width:100%;background:rgba(232,49,42,0.12);border:1px solid rgba(232,49,42,0.3);color:#f87171;border-radius:7px;padding:6px 9px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif;cursor:pointer"><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-close-line"/></svg> Limpar</button>
       </div>
     </div>
 
@@ -1039,11 +1106,11 @@
   </div>
 
   <!-- ── ANÁLISE POR ORIGEM ──────────────────────────────────────── -->
-  <div class="section-label">📊 Análise · Vendas por Origem</div>
+  <div class="section-label"><svg class="ri ri-pie-chart-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-pie-chart-2-line"/></svg> Análise · Vendas por Origem</div>
   <div class="charts-2-eq" style="margin-bottom:16px">
 
     <div class="card">
-      <div class="card-title" style="margin-bottom:4px">🤝 Vendas por Afiliado</div>
+      <div class="card-title" style="margin-bottom:4px"><svg class="ri ri-handshake-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-handshake-line"/></svg> Vendas por Afiliado</div>
       <div class="card-sub">Resultados no período selecionado</div>
       <div class="table-wrap table-limit" style="display:block;max-height:280px;overflow-y:auto;overflow-x:auto;">
         <table>
@@ -1063,7 +1130,7 @@
     </div>
 
     <div class="card">
-      <div class="card-title" style="margin-bottom:4px">📡 Vendas por Tráfego</div>
+      <div class="card-title" style="margin-bottom:4px"><svg class="ri ri-broadcast-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-broadcast-line"/></svg> Vendas por Tráfego</div>
       <div class="card-sub">Comparativo com e sem tráfego pago</div>
       <div class="table-wrap table-limit" style="display:block;max-height:280px;overflow-y:auto;overflow-x:auto;">
         <table>
@@ -1085,11 +1152,11 @@
   </div>
 
   <!-- ── RANKING DE CLOSERS ──────────────────────────────────────── -->
-  <div class="section-label">🏆 Análise · Vendas por Closer / SDR</div>
+  <div class="section-label"><svg class="ri ri-user-star-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-user-star-line"/></svg> Análise · Vendas por Closer / SDR</div>
   <div class="card" style="margin-bottom:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
       <div>
-        <div class="card-title" style="margin-bottom:2px">👤 Ranking de Closers</div>
+        <div class="card-title" style="margin-bottom:2px"><svg class="ri ri-user-star-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-user-star-line"/></svg> Ranking de Closers</div>
         <div class="card-sub">Desempenho individual no período selecionado</div>
       </div>
     </div>
@@ -1120,10 +1187,10 @@
   <div id="page-produtos">
 
     <!-- FILTRO DE PRODUTO — dropdown multi-seleção -->
-    <div class="section-label">📦 Selecione o Produto</div>
+    <div class="section-label"><svg class="ri ri-filter-3-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-filter-3-line"/></svg> Selecione o Produto</div>
     <div style="position:relative;margin-bottom:20px;max-width:400px" id="pf-container">
       <div id="pf-trigger" onclick="pfToggle()" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 14px;cursor:pointer;user-select:none;transition:border-color 0.15s;font-family:Montserrat,sans-serif">
-        <span style="font-size:16px">📦</span>
+        <span style="font-size:16px"><svg class="ri ri-box-3-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-box-3-line"/></svg></span>
         <span id="pf-label" style="flex:1;font-size:13px;font-weight:700;color:#fff">Todos os produtos</span>
         <span id="pf-arrow" style="font-size:11px;color:rgba(255,255,255,0.4);transition:transform 0.2s">▾</span>
       </div>
@@ -1133,28 +1200,28 @@
     </div>
 
     <!-- KPIs DO PRODUTO -->
-    <div class="section-label" id="prod-section-title" style="margin-top:24px">📊 Métricas do Produto Selecionado</div>
+    <div class="section-label" id="prod-section-title" style="margin-top:24px"><svg class="ri ri-dashboard-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-dashboard-line"/></svg> Métricas do Produto Selecionado</div>
     <div class="kpi-group cols-4 kpi-row-gap">
       <div class="kpi cyan">
-        <span class="kpi-icon">🆕</span>
+        <span class="kpi-icon"><svg class="ri ri-user-add-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-user-add-line"/></svg></span>
         <div class="kpi-label">Vendas Novas</div>
         <div class="kpi-value lg" id="p-vn">—</div>
         <div class="kpi-sub" id="p-vn-pct">—% do total</div>
       </div>
       <div class="kpi teal">
-        <span class="kpi-icon">🔁</span>
+        <span class="kpi-icon"><svg class="ri ri-repeat-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-repeat-line"/></svg></span>
         <div class="kpi-label">Vendas Recorrentes</div>
         <div class="kpi-value lg" id="p-vr">—</div>
         <div class="kpi-sub" id="p-vr-pct">—% do total</div>
       </div>
       <div class="kpi purple">
-        <span class="kpi-icon">💼</span>
+        <span class="kpi-icon"><svg class="ri ri-briefcase-4-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-briefcase-4-line"/></svg></span>
         <div class="kpi-label">Ticket Médio</div>
         <div class="kpi-value" id="p-ticket">—</div>
         <div class="kpi-sub">Por venda nova</div>
       </div>
       <div class="kpi gold">
-        <span class="kpi-icon">🏆</span>
+        <span class="kpi-icon"><svg class="ri ri-trophy-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-trophy-line"/></svg></span>
         <div class="kpi-label">Faturamento Total</div>
         <div class="kpi-value" id="p-fat-total">—</div>
         <div class="kpi-sub" id="p-fat-pct">—% do faturamento geral</div>
@@ -1162,19 +1229,19 @@
     </div>
     <div class="kpi-group cols-3 kpi-row-gap" style="margin-bottom:24px">
       <div class="kpi green">
-        <span class="kpi-icon">🆕</span>
+        <span class="kpi-icon"><svg class="ri ri-user-add-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-user-add-line"/></svg></span>
         <div class="kpi-label">Faturamento Leads Novos</div>
         <div class="kpi-value lg" id="p-fat-novos">—</div>
         <div class="kpi-sub">Apenas vendas novas</div>
       </div>
       <div class="kpi teal">
-        <span class="kpi-icon">🔁</span>
+        <span class="kpi-icon"><svg class="ri ri-repeat-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-repeat-line"/></svg></span>
         <div class="kpi-label">Faturamento Recorrente</div>
         <div class="kpi-value lg" id="p-fat-rec">—</div>
         <div class="kpi-sub">Parcelamentos recebidos</div>
       </div>
       <div class="kpi blue">
-        <span class="kpi-icon">📊</span>
+        <span class="kpi-icon"><svg class="ri ri-pie-chart-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-pie-chart-2-line"/></svg></span>
         <div class="kpi-label">Total de Vendas</div>
         <div class="kpi-value lg" id="p-vtotal">—</div>
         <div class="kpi-sub">Novas + Recorrentes</div>
@@ -1182,30 +1249,30 @@
     </div>
 
     <!-- GRÁFICOS DO PRODUTO -->
-    <div class="section-label">📈 Evolução · Produto Selecionado</div>
+    <div class="section-label"><svg class="ri ri-line-chart-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-line-chart-line"/></svg> Evolução · Produto Selecionado</div>
     <div class="charts-2-eq" style="margin-bottom:16px">
       <div class="card">
-        <div class="card-title">📅 Faturamento por Período</div>
+        <div class="card-title"><svg class="ri ri-calendar-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-calendar-2-line"/></svg> Faturamento por Período</div>
         <div class="card-sub">Novas vs Recorrentes ao longo do tempo</div>
         <canvas id="chart-prod-evolucao" height="120"></canvas>
       </div>
       <div class="card">
-        <div class="card-title">🍩 Composição de Vendas</div>
+        <div class="card-title"><svg class="ri ri-pie-chart-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-pie-chart-line"/></svg> Composição de Vendas</div>
         <div class="card-sub">Novas vs Recorrentes no período</div>
         <canvas id="chart-prod-donut" height="120"></canvas>
       </div>
     </div>
 
     <!-- COMPARATIVO TODOS OS PRODUTOS -->
-    <div class="section-label">📊 Comparativo · Todos os Produtos</div>
+    <div class="section-label"><svg class="ri ri-bar-chart-grouped-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-bar-chart-grouped-line"/></svg> Comparativo · Todos os Produtos</div>
     <div class="charts-2-eq" style="margin-bottom:16px">
       <div class="card">
-        <div class="card-title">💰 Faturamento Total por Produto</div>
+        <div class="card-title"><svg class="ri ri-coins-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-coins-line"/></svg> Faturamento Total por Produto</div>
         <div class="card-sub">Ordenado por maior contribuição no período</div>
         <canvas id="chart-comp-fat" height="130"></canvas>
       </div>
       <div class="card">
-        <div class="card-title">🎯 Vendas por Produto</div>
+        <div class="card-title"><svg class="ri ri-bar-chart-horizontal-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-bar-chart-horizontal-line"/></svg> Vendas por Produto</div>
         <div class="card-sub">Novas (escuro) + Recorrentes (claro)</div>
         <canvas id="chart-comp-vendas" height="130"></canvas>
       </div>
@@ -1213,7 +1280,7 @@
 
     <!-- TABELA COMPARATIVA -->
     <div class="card">
-      <div class="card-title" style="margin-bottom:4px">📋 Comparativo por Produto</div>
+      <div class="card-title" style="margin-bottom:4px"><svg class="ri ri-table-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-table-line"/></svg> Comparativo por Produto</div>
       <div class="card-sub">Todas as métricas disponíveis por produto no período selecionado</div>
       <div class="table-wrap table-limit" style="display:block;max-height:280px;overflow-y:auto;overflow-x:auto;">
         <table class="prod-table">
@@ -1732,13 +1799,13 @@ function salvarCloser() {
     if (idx !== -1) closers[idx].nome = nome;
     editingCloserId = null;
     document.getElementById('cp-btn').textContent = 'Adicionar ✓';
-    document.getElementById('cp-fb').textContent = '✅ Closer atualizado!';
+    document.getElementById('cp-fb').textContent = 'Closer atualizado!';
   } else {
     if (closers.find(c => c.nome.toLowerCase() === nome.toLowerCase())) {
       alert('Closer já cadastrado com esse nome.'); return;
     }
     closers.push({ id: Date.now(), nome });
-    document.getElementById('cp-fb').textContent = '✅ Closer adicionado!';
+    document.getElementById('cp-fb').textContent = 'Closer adicionado!';
   }
   saveClosers(closers);
   nomeEl.value = '';
@@ -1782,10 +1849,10 @@ function renderClosersList() {
   list.innerHTML = '<div style="margin-top:18px;display:flex;flex-direction:column;gap:8px">'
     + closers.map(c => `
     <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;padding:11px 14px">
-      <span style="font-size:13px;font-weight:600">👤 ${c.nome}</span>
+      <span style="font-size:13px;font-weight:600"><svg class="ri ri-user-3-line" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:5px;opacity:0.65;width:14px;height:14px;vertical-align:middle"><use href="#ri-user-3-line"/></svg>${c.nome}</span>
       <div style="display:flex;gap:7px">
-        <button onclick="editarCloser(${c.id})" style="background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.3);color:#f0c040;padding:4px 11px;border-radius:6px;cursor:pointer;font-size:13px;font-family:Montserrat,sans-serif">✏️</button>
-        <button onclick="excluirCloser(${c.id})" style="background:rgba(232,49,42,0.15);border:1px solid rgba(232,49,42,0.3);color:#f87171;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:Montserrat,sans-serif">✕</button>
+        <button onclick="editarCloser(${c.id})" style="background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.3);color:#f0c040;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:14px;font-family:Montserrat,sans-serif;line-height:1"><svg class="ri ri-pencil-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-pencil-line"/></svg></button>
+        <button onclick="excluirCloser(${c.id})" style="background:rgba(232,49,42,0.15);border:1px solid rgba(232,49,42,0.3);color:#f87171;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:14px;font-family:Montserrat,sans-serif;line-height:1"><svg class="ri ri-delete-bin-6-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-delete-bin-6-line"/></svg></button>
       </div>
     </div>`).join('')
     + '</div>';
@@ -1820,13 +1887,13 @@ function getProdMeta(nome) {
   const map = {
     'Visto Americano B1/B2':      { emoji:'🇺🇸', cor:'#60a5fa' },
     'Visto Canadense':             { emoji:'🇨🇦', cor:'#f87171' },
-    'EB-2 NIW':                    { emoji:'🌟', cor:'#f0c040' },
+    'EB-2 NIW':                    { emoji:'', cor:'#f0c040' },
     'Visto Schengen':              { emoji:'🇪🇺', cor:'#34d399' },
-    'Consultoria Express':         { emoji:'💼', cor:'#c084fc' },
-    'Assessoria para Passaporte':  { emoji:'📘', cor:'#fb923c' },
-    'Consulta Elite':              { emoji:'⭐', cor:'#e879f9' },
+    'Consultoria Express':         { emoji:'', cor:'#c084fc' },
+    'Assessoria para Passaporte':  { emoji:'', cor:'#fb923c' },
+    'Consulta Elite':              { emoji:'', cor:'#e879f9' },
   };
-  return map[nome] || { emoji:'📌', cor:'#94a3b8' };
+  return map[nome] || { emoji:'', cor:'#94a3b8' };
 }
 
 function buildProdData() {
@@ -1959,7 +2026,7 @@ function salvarVenda() {
   renderAnalytics();
   if(currentPage==='produtos') renderProdutos(); // atualiza Por Produto se estiver aberta
 
-  // 🔗 Envio para Google Sheets
+  // Envio para Google Sheets
   if (SHEETS_WEBAPP_URL) fetch(SHEETS_WEBAPP_URL, {method:'POST', mode:'no-cors', body: JSON.stringify(venda)});
 }
 
@@ -2141,22 +2208,22 @@ function renderVendasTable() {
   }
   tbody.innerHTML = sales.slice(0, 100).map(v => {
     const afilCell = v.afiliado === 'Sim'
-      ? '✅' + (v.nomeAfiliado ? ' <span style="font-size:10px;color:var(--white40)">(' + v.nomeAfiliado + ')</span>' : '')
+      ? '<svg class="ri ri-check-circle-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#4ade80;width:14px;height:14px;vertical-align:middle"><use href="#ri-check-circle-line"/></svg>' + (v.nomeAfiliado ? ' <span style="font-size:10px;color:var(--white40)">(' + v.nomeAfiliado + ')</span>' : '')
       : '—';
     return `<tr>
       <td>${v.date}</td>
-      <td><span class="pill ${v.tipo === 'Nova Venda' ? 'pill-green' : 'pill-cyan'}">${v.tipo === 'Nova Venda' ? '🆕 Nova' : '🔁 Recorr.'}</span></td>
+      <td><span class="pill ${v.tipo === 'Nova Venda' ? 'pill-green' : 'pill-cyan'}">${v.tipo === 'Nova Venda' ? 'Nova' : 'Recorr.'}</span></td>
       <td>${v.closer || '—'}</td>
       <td>${v.sdr || '—'}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.cliente}</td>
       <td>${v.servico || '—'}</td>
       <td class="highlight">${BRL(v.vlrRec)}</td>
-      <td>${v.trafego === 'Sim' ? '✅' : '—'}</td>
+      <td>${v.trafego === 'Sim' ? '<svg class="ri ri-check-circle-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#4ade80;width:14px;height:14px;vertical-align:middle"><use href="#ri-check-circle-line"/></svg>' : '—'}</td>
       <td>${afilCell}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--white40)">${v.obs || '—'}</td>
       <td style="display:flex;gap:5px;align-items:center">
-        <button onclick="editarVenda(${v.id})" style="background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.3);color:#f0c040;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:13px;font-family:Montserrat,sans-serif" title="Editar venda">✏️</button>
-        <button onclick="excluirVenda(${v.id})" style="background:rgba(232,49,42,0.15);border:1px solid rgba(232,49,42,0.3);color:#f87171;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:Montserrat,sans-serif">✕</button>
+        <button onclick="editarVenda(${v.id})" style="background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.3);color:#f0c040;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:14px;font-family:Montserrat,sans-serif;line-height:1" title="Editar venda"><svg class="ri ri-pencil-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-pencil-line"/></svg></button>
+        <button onclick="excluirVenda(${v.id})" style="background:rgba(232,49,42,0.15);border:1px solid rgba(232,49,42,0.3);color:#f87171;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:14px;font-family:Montserrat,sans-serif;line-height:1"><svg class="ri ri-delete-bin-6-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-delete-bin-6-line"/></svg></button>
       </td>
     </tr>`;
   }).join('');
@@ -2337,8 +2404,8 @@ function renderAnalytics() {
 
   // ── Tabela por Tráfego ────────────────────────────────────────────────────
   const trafMap = {
-    'Sim': { label:'📡 Tráfego Pago', vn:0, vr:0, fat:0 },
-    'Não': { label:'🤝 Orgânico / Direto', vn:0, vr:0, fat:0 },
+    'Sim': { label:'Tráfego Pago', vn:0, vr:0, fat:0 },
+    'Não': { label:'Orgânico / Direto', vn:0, vr:0, fat:0 },
   };
   sales.forEach(v => {
     const key = v.trafego === 'Sim' ? 'Sim' : 'Não';
@@ -2384,7 +2451,7 @@ function renderAnalytics() {
   });
   const { col: cCol, dir: cDir } = sortState.closer;
   closerData.sort((a, b) => (a[cCol] - b[cCol]) * cDir);
-  const medals = ['🥇','🥈','🥉'];
+  const medals = ['<span style="font-weight:900;color:#f0c040;font-size:13px">1°</span>','<span style="font-weight:900;color:#94a3b8;font-size:13px">2°</span>','<span style="font-weight:900;color:#fb923c;font-size:13px">3°</span>'];
   const closerRows = closerData.map((d, i) => {
     const rank = medals[i] || `<span style="color:var(--white40);font-size:12px">${i+1}</span>`;
     return `<tr>
@@ -2494,15 +2561,15 @@ function pfUpdateOptions() {
   const itemStyle = 'display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background 0.12s;font-size:13px;font-weight:700';
   el.innerHTML =
     `<div onclick="pfToggleItem('todos')" style="${itemStyle};${isTodos?'background:rgba(240,192,64,0.12)':''}border-bottom:1px solid rgba(255,255,255,0.07)">
-       <span style="font-size:15px;color:${isTodos?'#f0c040':'rgba(255,255,255,0.3)'}">${isTodos?'☑':'☐'}</span>
-       <span style="color:${isTodos?'#f0c040':'rgba(255,255,255,0.7)'}">🔍 Todos os produtos</span>
+       <span style="font-size:15px;color:${isTodos?'#f0c040':'rgba(255,255,255,0.3)'}"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><use href="#${isTodos?'ri-checkbox-circle-fill':'ri-circle-line'}"/></svg></span>
+       <span style="color:${isTodos?'#f0c040':'rgba(255,255,255,0.7)'}"><svg class="ri ri-search-line" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:5px;width:13px;height:13px;vertical-align:middle"><use href="#ri-search-line"/></svg>Todos os produtos</span>
      </div>` +
     allProds.map(p => {
       const checked = !isTodos && selectedProds.includes(p.nome);
       const safeName = p.nome.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return `<div onclick="pfToggleItem('${safeName}')" style="${itemStyle};${checked?'background:rgba(255,255,255,0.05)':''}">
-        <span style="font-size:15px;color:${checked?p.cor:'rgba(255,255,255,0.3)'}">${checked?'☑':'☐'}</span>
-        <span style="color:${checked?p.cor:'rgba(255,255,255,0.7)'}">${p.emoji} ${p.nome}</span>
+        <span style="font-size:15px;color:${checked?p.cor:'rgba(255,255,255,0.3)'}"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><use href="#${checked?'ri-checkbox-circle-fill':'ri-circle-line'}"/></svg></span>
+        <span style="color:${checked?p.cor:'rgba(255,255,255,0.7)'}"><span style="font-size:9px;margin-right:5px;vertical-align:middle;opacity:0.8">●</span>${p.nome}</span>
       </div>`;
     }).join('');
 }
@@ -2552,11 +2619,11 @@ function renderProdutos(){
     ticket: totalVN>0 ? tFN/totalVN : 0 };
 
   const titleEl = document.getElementById('prod-section-title');
-  if (selectedProds.includes('todos'))       titleEl.textContent='📊 Métricas Consolidadas — Todos os Produtos';
+  if (selectedProds.includes('todos'))       titleEl.innerHTML='<svg class="ri ri-dashboard-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-dashboard-line"/></svg> Métricas Consolidadas — Todos os Produtos';
   else if (selectedProds.length === 1) {
     const p = allProds.find(x=>x.nome===selectedProds[0]);
-    titleEl.textContent=`${p?.emoji||'📌'} ${selectedProds[0]}`;
-  } else titleEl.textContent=`📊 Métricas — ${selectedProds.length} Produtos Selecionados`;
+    titleEl.innerHTML=selectedProds[0];
+  } else titleEl.innerHTML=`<svg class="ri ri-dashboard-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-dashboard-line"/></svg> Métricas — ${selectedProds.length} Produtos Selecionados`;
 
   // Totais de referência (todos os produtos) para percentuais
   const allTotalFat = allProds.reduce((a,p)=>a+p.tFat,0);
@@ -2698,7 +2765,7 @@ async function loadSalesFromSheets() {
 
   // Mostra "carregando" apenas se não há dados em cache (não substitui dados existentes)
   if (tbody && !hasCached) {
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--white40);padding:28px;font-weight:600">⏳ Sincronizando com a planilha...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--white40);padding:28px;font-weight:600"><svg class="ri ri-loader-4-line" viewBox="0 0 24 24" aria-hidden="true" style="animation:spin 1.2s linear infinite;margin-right:6px"><use href="#ri-loader-4-line"/></svg>Sincronizando com a planilha...</td></tr>';
   }
 
   // Indicador de sync no header da seção (não substitui a tabela se há dados)
@@ -2724,21 +2791,21 @@ async function loadSalesFromSheets() {
       // Sempre mostra o erro visivelmente — no tbody se vazio, ou no indicador de sync se tem cache
       if (!hasCached && tbody) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#fbbf24;padding:24px;font-weight:600;font-size:12px">
-          ⚠️ ${errMsg}<br><span style="color:var(--white40);font-size:11px;font-weight:500">Verifique o Apps Script e clique em 🔄 para tentar novamente.</span>
+          <svg class="ri ri-error-warning-line" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:5px;color:#fbbf24"><use href="#ri-error-warning-line"/></svg>${errMsg}<br><span style="color:var(--white40);font-size:11px;font-weight:500">Verifique o Apps Script e clique em ↺ para tentar novamente.</span>
         </td></tr>`;
         return;
       }
-      if (syncEl) { syncEl.textContent = '⚠️ ' + errMsg; syncEl.style.display = 'inline'; }
+      if (syncEl) { syncEl.textContent = '⚠ ' + errMsg; syncEl.style.display = 'inline'; }
     }
   } catch (err) {
     console.warn('loadSalesFromSheets error:', err.message);
     if (!hasCached && tbody) {
       tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#f87171;padding:24px;font-weight:600;font-size:12px">
-        ❌ Erro ao conectar à planilha: ${err.message}<br><span style="color:var(--white40);font-size:11px;font-weight:500">Clique em 🔄 para tentar novamente.</span>
+        <svg class="ri ri-wifi-off-line" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:5px;color:#f87171"><use href="#ri-wifi-off-line"/></svg>Erro ao conectar à planilha: ${err.message}<br><span style="color:var(--white40);font-size:11px;font-weight:500">Clique em ↺ para tentar novamente.</span>
       </td></tr>`;
       return;
     }
-    if (syncEl) { syncEl.textContent = '❌ Erro ao sincronizar: ' + err.message; syncEl.style.display = 'inline'; }
+    if (syncEl) { syncEl.textContent = '✕ Erro ao sincronizar: ' + err.message; syncEl.style.display = 'inline'; }
   }
   renderVendasTable();
   render();
@@ -2801,11 +2868,11 @@ async function refreshDashboard() {
         } else {
           const errMsg = (!json.ok && json.error) ? json.error : 'A planilha retornou 0 vendas.';
           console.warn('Refresh Vendas:', errMsg);
-          if (syncEl) { syncEl.textContent = '⚠️ ' + errMsg; syncEl.style.display = 'inline'; }
+          if (syncEl) { syncEl.textContent = '⚠ ' + errMsg; syncEl.style.display = 'inline'; }
         }
       } catch (err) {
         console.warn('Refresh Vendas:', err.message);
-        if (syncEl) { syncEl.textContent = '❌ Erro: ' + err.message; syncEl.style.display = 'inline'; }
+        if (syncEl) { syncEl.textContent = '✕ Erro: ' + err.message; syncEl.style.display = 'inline'; }
       }
     })(),
   ]);
@@ -2891,7 +2958,7 @@ function renderProdutosList() {
           <span style="font-weight:700;font-size:13px">${p.nome}</span>
           <div style="display:flex;align-items:center;gap:10px">
             <span style="color:var(--white40);font-size:12px">${p.ticket > 0 ? BRL(p.ticket) : 'Ticket não definido'}</span>
-            <button onclick="excluirProduto(${i})" style="background:rgba(232,49,42,0.12);border:1px solid rgba(232,49,42,0.25);color:#f87171;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:11px;font-family:Montserrat,sans-serif">✕</button>
+            <button onclick="excluirProduto(${i})" style="background:rgba(232,49,42,0.12);border:1px solid rgba(232,49,42,0.25);color:#f87171;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:14px;font-family:Montserrat,sans-serif;line-height:1"><svg class="ri ri-delete-bin-6-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-delete-bin-6-line"/></svg></button>
           </div>
         </div>`).join('')}
     </div>`;
@@ -2981,8 +3048,8 @@ loadProductsFromSheets();
 <div class="modal-overlay" id="modal-venda" onclick="overlayClose(event,'venda')">
   <div class="modal-box">
     <div class="modal-header">
-      <span class="modal-title">💰 Registrar Venda</span>
-      <button class="modal-close" onclick="closeModal('venda')">✕</button>
+      <span class="modal-title"><svg class="ri ri-add-circle-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-add-circle-line"/></svg> Registrar Venda</span>
+      <button class="modal-close" onclick="closeModal('venda')"><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-close-line"/></svg></button>
     </div>
     <div class="modal-body">
 
@@ -2995,7 +3062,7 @@ loadProductsFromSheets();
           <label>Tipo de Recebimento</label>
           <select id="sv-tipo">
             <option value="Nova Venda">🆕 Nova Venda</option>
-            <option value="Recorrência">🔁 Recebimento de Recorrência</option>
+            <option value="Recorrência">Recebimento de Recorrência</option>
           </select>
         </div>
         <div class="fg">
@@ -3044,15 +3111,15 @@ loadProductsFromSheets();
         <div class="fg">
           <label>Tráfego Pago</label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="sv-trafego" value="Sim" checked/><span>✅ Sim</span></label>
-            <label class="radio-opt"><input type="radio" name="sv-trafego" value="Não"/><span>❌ Não</span></label>
+            <label class="radio-opt"><input type="radio" name="sv-trafego" value="Sim" checked/><span><svg class="ri ri-check-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#4ade80;margin-right:3px;vertical-align:middle;width:13px;height:13px"><use href="#ri-check-line"/></svg>Sim</span></label>
+            <label class="radio-opt"><input type="radio" name="sv-trafego" value="Não"/><span><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#f87171;margin-right:3px;vertical-align:middle;width:13px;height:13px"><use href="#ri-close-line"/></svg>Não</span></label>
           </div>
         </div>
         <div class="fg">
           <label>Afiliado</label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="sv-afiliado" value="Sim" onclick="toggleAfiliado(true)"/><span>✅ Sim</span></label>
-            <label class="radio-opt"><input type="radio" name="sv-afiliado" value="Não" checked onclick="toggleAfiliado(false)"/><span>❌ Não</span></label>
+            <label class="radio-opt"><input type="radio" name="sv-afiliado" value="Sim" onclick="toggleAfiliado(true)"/><span><svg class="ri ri-check-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#4ade80;margin-right:3px;vertical-align:middle;width:13px;height:13px"><use href="#ri-check-line"/></svg>Sim</span></label>
+            <label class="radio-opt"><input type="radio" name="sv-afiliado" value="Não" checked onclick="toggleAfiliado(false)"/><span><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#f87171;margin-right:3px;vertical-align:middle;width:13px;height:13px"><use href="#ri-close-line"/></svg>Não</span></label>
           </div>
           <input type="text" id="sv-nome-afiliado" placeholder="Nome do afiliado..." style="margin-top:8px;display:none"/>
         </div>
@@ -3063,7 +3130,7 @@ loadProductsFromSheets();
       </div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:10px;gap:10px;align-items:center">
-        <div id="sv-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">✅ Venda registrada!</div>
+        <div id="sv-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">Venda registrada!</div>
         <button class="btn-save" onclick="salvarVenda()">Salvar Venda ✓</button>
       </div>
 
@@ -3077,8 +3144,8 @@ loadProductsFromSheets();
 <div class="modal-overlay" id="modal-produto" onclick="overlayClose(event,'produto')">
   <div class="modal-box" style="max-width:480px">
     <div class="modal-header">
-      <span class="modal-title">📦 Catálogo de Produtos</span>
-      <button class="modal-close" onclick="closeModal('produto')">✕</button>
+      <span class="modal-title"><svg class="ri ri-box-3-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-box-3-line"/></svg> Catálogo de Produtos</span>
+      <button class="modal-close" onclick="closeModal('produto')"><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-close-line"/></svg></button>
     </div>
     <div class="modal-body">
 
@@ -3096,7 +3163,7 @@ loadProductsFromSheets();
       </div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;align-items:center">
-        <div id="pp-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">✅ Produto adicionado!</div>
+        <div id="pp-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">Produto adicionado!</div>
         <button class="btn-save" onclick="salvarProduto()">Adicionar ✓</button>
       </div>
 
@@ -3112,8 +3179,8 @@ loadProductsFromSheets();
 <div class="modal-overlay" id="modal-closer" onclick="overlayClose(event,'closer')">
   <div class="modal-box" style="max-width:480px">
     <div class="modal-header">
-      <span class="modal-title">👤 Equipe de Closers</span>
-      <button class="modal-close" onclick="closeModal('closer')">✕</button>
+      <span class="modal-title"><svg class="ri ri-team-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-team-line"/></svg> Equipe de Closers</span>
+      <button class="modal-close" onclick="closeModal('closer')"><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-close-line"/></svg></button>
     </div>
     <div class="modal-body">
 
@@ -3128,7 +3195,7 @@ loadProductsFromSheets();
       </div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:8px;min-height:20px">
-        <div id="cp-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">✅ Closer adicionado!</div>
+        <div id="cp-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">Closer adicionado!</div>
       </div>
 
       <div id="cp-list"></div>
@@ -3143,8 +3210,8 @@ loadProductsFromSheets();
 <div class="modal-overlay" id="modal-editar" onclick="overlayClose(event,'editar')">
   <div class="modal-box" style="max-width:800px">
     <div class="modal-header">
-      <span class="modal-title">✏️ Editar Venda</span>
-      <button class="modal-close" onclick="closeModal('editar')">✕</button>
+      <span class="modal-title"><svg class="ri ri-edit-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-edit-line"/></svg> Editar Venda</span>
+      <button class="modal-close" onclick="closeModal('editar')"><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-close-line"/></svg></button>
     </div>
     <div class="modal-body">
 
@@ -3157,7 +3224,7 @@ loadProductsFromSheets();
           <label>Tipo de Recebimento</label>
           <select id="ev-tipo">
             <option value="Nova Venda">🆕 Nova Venda</option>
-            <option value="Recorrência">🔁 Recebimento de Recorrência</option>
+            <option value="Recorrência">Recebimento de Recorrência</option>
           </select>
         </div>
         <div class="fg">
@@ -3206,15 +3273,15 @@ loadProductsFromSheets();
         <div class="fg">
           <label>Tráfego Pago</label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="ev-trafego" value="Sim"/><span>✅ Sim</span></label>
-            <label class="radio-opt"><input type="radio" name="ev-trafego" value="Não" checked/><span>❌ Não</span></label>
+            <label class="radio-opt"><input type="radio" name="ev-trafego" value="Sim"/><span><svg class="ri ri-check-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#4ade80;margin-right:3px;vertical-align:middle;width:13px;height:13px"><use href="#ri-check-line"/></svg>Sim</span></label>
+            <label class="radio-opt"><input type="radio" name="ev-trafego" value="Não" checked/><span><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#f87171;margin-right:3px;vertical-align:middle;width:13px;height:13px"><use href="#ri-close-line"/></svg>Não</span></label>
           </div>
         </div>
         <div class="fg">
           <label>Afiliado</label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="ev-afiliado" value="Sim" onclick="toggleEvAfiliado(true)"/><span>✅ Sim</span></label>
-            <label class="radio-opt"><input type="radio" name="ev-afiliado" value="Não" checked onclick="toggleEvAfiliado(false)"/><span>❌ Não</span></label>
+            <label class="radio-opt"><input type="radio" name="ev-afiliado" value="Sim" onclick="toggleEvAfiliado(true)"/><span><svg class="ri ri-check-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#4ade80;margin-right:3px;vertical-align:middle;width:13px;height:13px"><use href="#ri-check-line"/></svg>Sim</span></label>
+            <label class="radio-opt"><input type="radio" name="ev-afiliado" value="Não" checked onclick="toggleEvAfiliado(false)"/><span><svg class="ri ri-close-line" viewBox="0 0 24 24" aria-hidden="true" style="color:#f87171;margin-right:3px;vertical-align:middle;width:13px;height:13px"><use href="#ri-close-line"/></svg>Não</span></label>
           </div>
           <input type="text" id="ev-nome-afiliado" placeholder="Nome do afiliado..." style="margin-top:8px;display:none"/>
         </div>
@@ -3225,7 +3292,7 @@ loadProductsFromSheets();
       </div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;align-items:center">
-        <div id="ev-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">✅ Venda atualizada!</div>
+        <div id="ev-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">Venda atualizada!</div>
         <button onclick="closeModal('editar')" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:var(--white80);padding:10px 20px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;font-family:Montserrat,sans-serif">Cancelar</button>
         <button class="btn-save" onclick="atualizarVenda()">Atualizar informações ✓</button>
       </div>
