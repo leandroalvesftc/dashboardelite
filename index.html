@@ -1975,8 +1975,11 @@ function renderVendasTable() {
     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--white40);padding:28px;font-weight:600">Nenhuma venda encontrada</td></tr>';
     return;
   }
-  tbody.innerHTML = sales.slice(0, 100).map(v => `
-    <tr>
+  tbody.innerHTML = sales.slice(0, 100).map(v => {
+    const afilCell = v.afiliado === 'Sim'
+      ? '✅' + (v.nomeAfiliado ? ' <span style="font-size:10px;color:var(--white40)">(' + v.nomeAfiliado + ')</span>' : '')
+      : '—';
+    return `<tr>
       <td>${v.date}</td>
       <td><span class="pill ${v.tipo === 'Nova Venda' ? 'pill-green' : 'pill-cyan'}">${v.tipo === 'Nova Venda' ? '🆕 Nova' : '🔁 Recorr.'}</span></td>
       <td>${v.closer || '—'}</td>
@@ -1985,10 +1988,99 @@ function renderVendasTable() {
       <td>${v.servico || '—'}</td>
       <td class="highlight">${BRL(v.vlrRec)}</td>
       <td>${v.trafego === 'Sim' ? '✅' : '—'}</td>
-      <td>${v.afiliado === 'Sim' ? `✅${v.nomeAfiliado ? ' <span style="font-size:10px;color:var(--white40)">(${v.nomeAfiliado})</span>' : ''}` : '—'}</td>
+      <td>${afilCell}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--white40)">${v.obs || '—'}</td>
-      <td><button onclick="excluirVenda(${v.id})" style="background:rgba(232,49,42,0.15);border:1px solid rgba(232,49,42,0.3);color:#f87171;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:Montserrat,sans-serif">✕</button></td>
-    </tr>`).join('');
+      <td style="display:flex;gap:5px;align-items:center">
+        <button onclick="editarVenda(${v.id})" style="background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.3);color:#f0c040;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:13px;font-family:Montserrat,sans-serif" title="Editar venda">✏️</button>
+        <button onclick="excluirVenda(${v.id})" style="background:rgba(232,49,42,0.15);border:1px solid rgba(232,49,42,0.3);color:#f87171;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:Montserrat,sans-serif">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── EDIÇÃO DE VENDA ───────────────────────────────────────────────────────────
+let editingVendaId = null;
+
+function editarVenda(id) {
+  const venda = getSales().find(v => v.id === id);
+  if (!venda) return;
+  editingVendaId = id;
+  // Preenche os campos do modal
+  document.getElementById('ev-date').value    = venda.date    || '';
+  document.getElementById('ev-tipo').value    = venda.tipo    || 'Nova Venda';
+  document.getElementById('ev-closer').value  = venda.closer  || '';
+  document.getElementById('ev-sdr').value     = venda.sdr     || '';
+  document.getElementById('ev-cliente').value = venda.cliente || '';
+  document.getElementById('ev-tel').value     = venda.tel     || '';
+  document.getElementById('ev-vlr-servico').value  = venda.vlrSvc   || '';
+  document.getElementById('ev-vlr-total').value    = venda.vlrTotal || '';
+  document.getElementById('ev-vlr-recebido').value = venda.vlrRec   || '';
+  document.getElementById('ev-obs').value     = venda.obs     || '';
+  const traf = document.querySelector('input[name="ev-trafego"][value="' + (venda.trafego || 'Não') + '"]');
+  if (traf) traf.checked = true;
+  const afil = document.querySelector('input[name="ev-afiliado"][value="' + (venda.afiliado || 'Não') + '"]');
+  if (afil) afil.checked = true;
+  toggleEvAfiliado(venda.afiliado === 'Sim');
+  document.getElementById('ev-nome-afiliado').value = venda.nomeAfiliado || '';
+  // Preenche dropdown de serviço
+  const sel = document.getElementById('ev-servico');
+  if (sel) sel.value = venda.servico || '';
+  document.getElementById('ev-fb').style.display = 'none';
+  openModal('editar');
+}
+
+function toggleEvAfiliado(show) {
+  const el = document.getElementById('ev-nome-afiliado');
+  if (!el) return;
+  el.style.display = show ? 'block' : 'none';
+  if (!show) el.value = '';
+}
+
+async function atualizarVenda() {
+  const sales = getSales();
+  const idx   = sales.findIndex(v => v.id === editingVendaId);
+  if (idx === -1) return;
+  const date     = document.getElementById('ev-date').value;
+  const tipo     = document.getElementById('ev-tipo').value;
+  const closer   = document.getElementById('ev-closer').value.trim();
+  const sdr      = document.getElementById('ev-sdr').value.trim();
+  const cliente  = document.getElementById('ev-cliente').value.trim();
+  const tel      = document.getElementById('ev-tel').value.trim();
+  const servico  = document.getElementById('ev-servico').value;
+  const vlrSvc   = parseFloat(document.getElementById('ev-vlr-servico').value)  || 0;
+  const vlrTotal = parseFloat(document.getElementById('ev-vlr-total').value)    || 0;
+  const vlrRec   = parseFloat(document.getElementById('ev-vlr-recebido').value) || 0;
+  const trafego      = document.querySelector('input[name="ev-trafego"]:checked')?.value  || 'Não';
+  const afiliado     = document.querySelector('input[name="ev-afiliado"]:checked')?.value || 'Não';
+  const nomeAfiliado = afiliado === 'Sim' ? document.getElementById('ev-nome-afiliado').value.trim() : '';
+  const obs          = document.getElementById('ev-obs').value.trim();
+  if (!date)   { alert('Informe a data.'); return; }
+  if (!cliente){ alert('Informe o nome do cliente.'); return; }
+  if (!vlrRec) { alert('Informe o valor recebido.'); return; }
+  const oldVenda     = sales[idx];
+  const updatedVenda = { ...oldVenda, date, tipo, closer, sdr, cliente, tel, servico, vlrSvc, vlrTotal, vlrRec, trafego, afiliado, nomeAfiliado, obs };
+  sales[idx] = updatedVenda;
+  saveSales(sales);
+  updateVendaInSheets(oldVenda, updatedVenda);
+  const fb = document.getElementById('ev-fb');
+  fb.style.display = 'block';
+  setTimeout(() => { fb.style.display = 'none'; closeModal('editar'); }, 1400);
+  renderVendasTable(); render(); renderAnalytics();
+  if (currentPage === 'produtos') renderProdutos();
+}
+
+async function updateVendaInSheets(oldVenda, newVenda) {
+  if (!SHEETS_WEBAPP_URL) return;
+  try {
+    await fetch(SHEETS_WEBAPP_URL, {
+      method: 'POST', mode: 'no-cors',
+      body: JSON.stringify({
+        action: 'editar-venda',
+        old: { date: oldVenda.date, tipo: oldVenda.tipo, cliente: oldVenda.cliente, vlrRec: oldVenda.vlrRec },
+        new: newVenda,
+      })
+    });
+  } catch(err) { console.warn('updateVendaInSheets:', err.message); }
 }
 
 async function deleteVendaFromSheets(venda) {
@@ -2460,47 +2552,57 @@ async function refreshDashboard() {
   btn.disabled = true;
   icon.style.animation = 'spin 0.7s linear infinite';
 
-  try {
-    // Busca os dados de Meta Ads da planilha via Web App (doGet?action=metaads)
-    const url  = SHEETS_WEBAPP_URL + '?action=metaads';
-    const resp = await fetch(url, { redirect: 'follow' });
-    const json = await resp.json();
+  // Busca Meta Ads E Vendas em paralelo
+  await Promise.all([
+    // ── Meta Ads ──────────────────────────────────────────────────────────
+    (async () => {
+      try {
+        const resp = await fetch(SHEETS_WEBAPP_URL + '?action=metaads', { redirect: 'follow' });
+        const json = await resp.json();
+        if (json.ok && json.rows && json.rows.length > 0) {
+          const byDate = {};
+          json.rows.forEach(r => { byDate[r.date] = r; });
+          const allDays = genDays(DATA_DAYS);
+          allDays.forEach((d, i) => {
+            const r = byDate[d];
+            RAW.inv_leads[i]   = r ? r.invLeads    : RAW.inv_leads[i];
+            RAW.inv_brand[i]   = r ? r.invBrand    : RAW.inv_brand[i];
+            RAW.leads[i]       = r ? r.leads       : RAW.leads[i];
+            RAW.impressions[i] = r ? r.impressions : RAW.impressions[i];
+            RAW.reach[i]       = r ? r.reach       : RAW.reach[i];
+            RAW.ctr[i]         = r ? r.ctr         : RAW.ctr[i];
+            RAW.cpm[i]         = r ? r.cpm         : RAW.cpm[i];
+          });
+          const ultima = json.rows[json.rows.length - 1].date;
+          document.getElementById('last-update').textContent =
+            new Date(ultima + 'T12:00:00').toLocaleDateString('pt-BR',
+              { day:'2-digit', month:'short' }) + ' · atualizado agora';
+        }
+      } catch (err) { console.warn('Refresh MetaAds:', err.message); }
+    })(),
 
-    if (json.ok && json.rows && json.rows.length > 0) {
-      // Indexa os dados por data (yyyy-MM-dd)
-      const byDate = {};
-      json.rows.forEach(r => { byDate[r.date] = r; });
+    // ── Vendas ────────────────────────────────────────────────────────────
+    (async () => {
+      try {
+        const resp = await fetch(SHEETS_WEBAPP_URL + '?action=vendas', { redirect: 'follow' });
+        const json = await resp.json();
+        if (json.ok && Array.isArray(json.rows) && json.rows.length > 0) {
+          const sales = json.rows.map(r => ({
+            ...r,
+            id: hashId(r.date + r.cliente + String(r.vlrRec) + r.tipo),
+          }));
+          saveSales(sales);
+        }
+      } catch (err) { console.warn('Refresh Vendas:', err.message); }
+    })(),
+  ]);
 
-      // Mapeia cada dia da janela de 30 dias para os arrays RAW
-      const allDays = genDays(DATA_DAYS);
-      allDays.forEach((d, i) => {
-        const r = byDate[d];
-        RAW.inv_leads[i]   = r ? r.invLeads    : RAW.inv_leads[i];
-        RAW.inv_brand[i]   = r ? r.invBrand    : RAW.inv_brand[i];
-        RAW.leads[i]       = r ? r.leads       : RAW.leads[i];
-        RAW.impressions[i] = r ? r.impressions : RAW.impressions[i];
-        RAW.reach[i]       = r ? r.reach       : RAW.reach[i];
-        RAW.ctr[i]         = r ? r.ctr         : RAW.ctr[i];
-        RAW.cpm[i]         = r ? r.cpm         : RAW.cpm[i];
-      });
-
-      // Atualiza timestamp no header
-      const ultima = json.rows[json.rows.length - 1].date;
-      document.getElementById('last-update').textContent =
-        new Date(ultima + 'T12:00:00').toLocaleDateString('pt-BR',
-          { day:'2-digit', month:'short' }) + ' · atualizado agora';
-    }
-  } catch (err) {
-    console.warn('Refresh: não foi possível conectar à planilha.', err);
-  }
-
-  // Atualiza todos os componentes do dashboard
+  // Re-renderiza tudo
   render();
   renderVendasTable();
   renderAnalytics();
   if (currentPage === 'produtos') renderProdutos();
 
-  // Param animação
   setTimeout(() => {
     icon.style.animation = '';
     btn.disabled = false;
@@ -2550,14 +2652,17 @@ async function loadProductsFromSheets() {
 }
 
 function refreshServicos() {
-  const sel = document.getElementById('sv-servico');
-  if (!sel) return;
-  const current = sel.value;
   const prods = getProducts();
-  sel.innerHTML = '<option value="">Selecione...</option>' +
+  const opts  = '<option value="">Selecione...</option>' +
     prods.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('') +
     '<option value="Outro">Outro</option>';
-  if (current) sel.value = current;
+  ['sv-servico', 'ev-servico'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = opts;
+    if (cur) sel.value = cur;
+  });
 }
 
 function renderProdutosList() {
@@ -2776,6 +2881,103 @@ loadProductsFromSheets();
       </div>
 
       <div id="pp-list"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: EDITAR VENDA
+════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-editar" onclick="overlayClose(event,'editar')">
+  <div class="modal-box" style="max-width:800px">
+    <div class="modal-header">
+      <span class="modal-title">✏️ Editar Venda</span>
+      <button class="modal-close" onclick="closeModal('editar')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-row cols-4">
+        <div class="fg">
+          <label>Data do Recebimento</label>
+          <input type="date" id="ev-date"/>
+        </div>
+        <div class="fg">
+          <label>Tipo de Recebimento</label>
+          <select id="ev-tipo">
+            <option value="Nova Venda">🆕 Nova Venda</option>
+            <option value="Recorrência">🔁 Recebimento de Recorrência</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Closer</label>
+          <input type="text" id="ev-closer" placeholder="ex: Albert"/>
+        </div>
+        <div class="fg">
+          <label>SDR</label>
+          <input type="text" id="ev-sdr" placeholder="ex: João"/>
+        </div>
+      </div>
+
+      <div class="form-row cols-3">
+        <div class="fg">
+          <label>Nome Completo do Cliente</label>
+          <input type="text" id="ev-cliente" placeholder="ex: João da Silva"/>
+        </div>
+        <div class="fg">
+          <label>Número do Cliente</label>
+          <input type="tel" id="ev-tel" placeholder="ex: +55 11 99999-9999"/>
+        </div>
+        <div class="fg">
+          <label>Nome do Serviço</label>
+          <select id="ev-servico">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row cols-3">
+        <div class="fg">
+          <label>Valor do Serviço (R$)</label>
+          <input type="number" id="ev-vlr-servico" placeholder="ex: 5.000" step="0.01" min="0"/>
+        </div>
+        <div class="fg">
+          <label>Valor Total (R$)</label>
+          <input type="number" id="ev-vlr-total" placeholder="ex: 5.000" step="0.01" min="0"/>
+        </div>
+        <div class="fg">
+          <label>Valor Recebido (R$)</label>
+          <input type="number" id="ev-vlr-recebido" placeholder="ex: 1.000" step="0.01" min="0"/>
+        </div>
+      </div>
+
+      <div class="form-row cols-2-obs">
+        <div class="fg">
+          <label>Tráfego Pago</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="ev-trafego" value="Sim"/><span>✅ Sim</span></label>
+            <label class="radio-opt"><input type="radio" name="ev-trafego" value="Não" checked/><span>❌ Não</span></label>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Afiliado</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="ev-afiliado" value="Sim" onclick="toggleEvAfiliado(true)"/><span>✅ Sim</span></label>
+            <label class="radio-opt"><input type="radio" name="ev-afiliado" value="Não" checked onclick="toggleEvAfiliado(false)"/><span>❌ Não</span></label>
+          </div>
+          <input type="text" id="ev-nome-afiliado" placeholder="Nome do afiliado..." style="margin-top:8px;display:none"/>
+        </div>
+        <div class="fg">
+          <label>Observação</label>
+          <textarea id="ev-obs" rows="2" placeholder="Detalhes adicionais, forma de pagamento, parcelas..."></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;align-items:center">
+        <div id="ev-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">✅ Venda atualizada!</div>
+        <button onclick="closeModal('editar')" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:var(--white80);padding:10px 20px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;font-family:Montserrat,sans-serif">Cancelar</button>
+        <button class="btn-save" onclick="atualizarVenda()">Atualizar informações ✓</button>
+      </div>
 
     </div>
   </div>
