@@ -261,6 +261,65 @@
     .pill-red   { background: rgba(232,49,42,0.2);  color: #f87171; border: 1px solid rgba(232,49,42,0.3); }
     .pill-cyan  { background: rgba(34,211,238,0.2); color: #67e8f9; border: 1px solid rgba(34,211,238,0.3); }
 
+    /* ── PRODUCT FILTER (shared, fixed-position panel) ── */
+    .kpi-filter-btn {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px; padding: 2px 5px; cursor: pointer; color: var(--white70);
+      display: inline-flex; align-items: center; gap: 2px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
+      text-transform: uppercase; transition: background 0.15s, border-color 0.15s;
+      line-height: 1; vertical-align: middle; margin-left: 5px; flex-shrink: 0;
+    }
+    .kpi-filter-btn:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); color: #fff; }
+    .kpi-filter-btn svg.ri { width: 11px; height: 11px; transition: transform 0.2s; }
+    .kpi-filter-btn.open svg.ri { transform: rotate(180deg); }
+    /* Shared floating panel — appended to body, position:fixed avoids overflow:hidden clipping */
+    #prod-filter-panel {
+      display: none; position: fixed; z-index: 9999; width: 230px;
+      background: #0e1a5e; border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 13px; padding: 13px; box-shadow: 0 16px 48px rgba(0,0,0,0.65);
+    }
+    #prod-filter-panel.open { display: block; }
+    .kfp-title {
+      font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--white40); margin-bottom: 9px;
+    }
+    .kfp-item {
+      display: flex; align-items: center; gap: 8px; padding: 5px 4px;
+      border-radius: 7px; cursor: pointer; transition: background 0.12s;
+      font-size: 11px; font-weight: 600; color: var(--white70); user-select: none;
+    }
+    .kfp-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .kfp-check {
+      width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0;
+      border: 1.5px solid rgba(255,255,255,0.25); background: transparent;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .kfp-item.checked .kfp-check { background: #f97316; border-color: #f97316; }
+    .kfp-item.checked .kfp-check::after {
+      content: ''; display: block; width: 5px; height: 8px;
+      border: 2px solid #fff; border-top: none; border-left: none;
+      transform: rotate(42deg) translate(-1px, -1px);
+    }
+    .kfp-item.checked { color: #fff; }
+    .kfp-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 7px 0; }
+    .kfp-actions { display: flex; gap: 6px; margin-top: 9px; }
+    .kfp-action-btn {
+      flex: 1; padding: 6px 0; border-radius: 7px; border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06); color: var(--white70); font-size: 10px;
+      font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+      transition: background 0.15s;
+    }
+    .kfp-action-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .kfp-action-btn.primary { background: rgba(249,115,22,0.2); border-color: rgba(249,115,22,0.4); color: #fb923c; }
+    .kfp-action-btn.primary:hover { background: rgba(249,115,22,0.35); color: #fff; }
+    .kpi-filter-badge {
+      display: inline-block; background: rgba(249,115,22,0.18); border: 1px solid rgba(249,115,22,0.35);
+      border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700;
+      color: #fb923c; letter-spacing: 0.3px;
+    }
+    .kpi-filter-badge.all { background: transparent; border-color: transparent; color: var(--white40); font-weight: 400; }
+
     /* EXTENDED FORM STYLES */
     .form-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
     .form-row.cols-2-obs { display: grid; grid-template-columns: 1fr 1fr 3fr; gap: 12px; align-items: start; margin-bottom: 12px; }
@@ -751,6 +810,7 @@
 <symbol id="ri-user-star-line" viewBox="0 0 24 24"><path d="M12 14V16C8.68629 16 6 18.6863 6 22H4C4 17.5817 7.58172 14 12 14ZM12 13C8.685 13 6 10.315 6 7C6 3.685 8.685 1 12 1C15.315 1 18 3.685 18 7C18 10.315 15.315 13 12 13ZM12 11C14.21 11 16 9.21 16 7C16 4.79 14.21 3 12 3C9.79 3 8 4.79 8 7C8 9.21 9.79 11 12 11ZM18 21.5L15.0611 23.0451L15.6224 19.7725L13.2447 17.4549L16.5305 16.9775L18 14L19.4695 16.9775L22.7553 17.4549L20.3776 19.7725L20.9389 23.0451L18 21.5Z"/></symbol>
 <symbol id="ri-wifi-line" viewBox="0 0 24 24"><path d="M0.689453 6.99659C3.78027 4.49704 7.71526 3 11.9999 3C16.2845 3 20.2195 4.49704 23.3104 6.99659L22.0536 8.55252C19.3062 6.3307 15.8085 5 11.9999 5C8.19133 5 4.69356 6.3307 1.94617 8.55252L0.689453 6.99659ZM3.83124 10.8864C6.0635 9.08119 8.90544 8 11.9999 8C15.0944 8 17.9363 9.08119 20.1686 10.8864L18.9118 12.4424C17.023 10.9149 14.6183 10 11.9999 10C9.38151 10 6.97679 10.9149 5.08796 12.4424L3.83124 10.8864ZM6.97304 14.7763C8.34673 13.6653 10.0956 13 11.9999 13C13.9042 13 15.6531 13.6653 17.0268 14.7763L15.7701 16.3322C14.7398 15.499 13.4281 15 11.9999 15C10.5717 15 9.26002 15.499 8.22975 16.3322L6.97304 14.7763ZM10.1148 18.6661C10.63 18.2495 11.2858 18 11.9999 18C12.714 18 13.3698 18.2495 13.885 18.6661L11.9999 21L10.1148 18.6661Z"/></symbol>
 <symbol id="ri-wifi-off-line" viewBox="0 0 24 24"><path d="M12.0001 18C12.7144 18 13.3704 18.2497 13.8856 18.6665L12.0001 21L10.1145 18.6665C10.6297 18.2497 11.2857 18 12.0001 18ZM2.80766 1.39343L20.4853 19.0711L19.0711 20.4853L13.8913 15.3042C13.2967 15.1069 12.6609 15 12.0001 15C10.5719 15 9.26024 15.499 8.22998 16.3322L6.97363 14.7759C8.24961 13.7442 9.84925 13.0969 11.5964 13.01L9.00025 10.414C7.55273 10.8234 6.22651 11.5217 5.0878 12.4426L3.83099 10.8868C4.89946 10.0226 6.10763 9.32438 7.41633 8.83118L5.13168 6.5451C3.98878 7.08913 2.92058 7.76472 1.94666 8.55228L0.689453 6.99674C1.60358 6.25747 2.59156 5.60589 3.64058 5.05479L1.39345 2.80765L2.80766 1.39343ZM14.5004 10.2854L12.2165 8.00243L12 8C15.0947 8 17.9369 9.08141 20.1693 10.8869L18.9123 12.4426C17.6438 11.4167 16.1427 10.6672 14.5004 10.2854ZM12.0001 3.00003C16.2849 3.00003 20.22 4.49719 23.3109 6.99691L22.0534 8.55228C19.3061 6.33062 15.8085 5.00003 12.0001 5.00003C11.122 5.00003 10.2604 5.07077 9.42075 5.20685L7.72455 3.51088C9.09498 3.17702 10.5268 3.00003 12.0001 3.00003Z"/></symbol>
+<symbol id="ri-arrow-down-s-line" viewBox="0 0 24 24"><path d="M11.9999 13.1714L16.9497 8.22168L18.3639 9.63589L11.9999 15.9999L5.63599 9.63589L7.0502 8.22168L11.9999 13.1714Z"/></symbol>
 </svg>
 
 <div class="topbar">
@@ -836,21 +896,26 @@
     </div>
     <div class="kpi orange">
       <span class="kpi-icon"><svg class="ri ri-target-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-target-line"/></svg></span>
-      <div class="kpi-label">Invest. Leads / Vendas</div>
+      <div class="kpi-label" style="display:flex;align-items:center;justify-content:space-between;gap:4px">
+        <span>Invest. Leads / Vendas</span>
+        <button class="kpi-filter-btn" id="btn-filter-invest" onclick="openProdFilter(this)" title="Filtrar por produto">
+          <svg class="ri ri-arrow-down-s-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-arrow-down-s-line"/></svg>
+        </button>
+      </div>
       <div class="kpi-value" id="kpi-invest-leads">—</div>
-      <div class="kpi-sub">Campanhas de conversão</div>
+      <div class="kpi-sub"><span class="kpi-filter-badge all" id="filter-badge-invest">Todos os produtos</span></div>
     </div>
     <div class="kpi purple">
       <span class="kpi-icon"><svg class="ri ri-megaphone-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-megaphone-line"/></svg></span>
       <div class="kpi-label">Invest. Branding</div>
       <div class="kpi-value" id="kpi-invest-brand">—</div>
-      <div class="kpi-sub">Branding e processo seletivo</div>
+      <div class="kpi-sub">Branding e distribuição de conteúdo</div>
     </div>
   </div>
 
   <!-- ── BLOCO 2: VENDAS ───────────────────────────────────── -->
   <div class="section-label"><svg class="ri ri-store-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-store-2-line"/></svg> Vendas</div>
-  <div class="kpi-group cols-4 kpi-row-gap">
+  <div class="kpi-group cols-5 kpi-row-gap">
     <div class="kpi cyan">
       <span class="kpi-icon"><svg class="ri ri-user-add-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-user-add-line"/></svg></span>
       <div class="kpi-label">Vendas Novas</div>
@@ -876,6 +941,12 @@
       <div class="kpi-label">Ticket Médio</div>
       <div class="kpi-value" id="kpi-ticket">—</div>
       <div class="kpi-sub">Por venda nova</div>
+    </div>
+    <div class="kpi red">
+      <span class="kpi-icon"><svg class="ri ri-coin-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-coin-line"/></svg></span>
+      <div class="kpi-label">CAC</div>
+      <div class="kpi-value" id="kpi-cac">—</div>
+      <div class="kpi-sub">Custo de aquisição</div>
     </div>
   </div>
 
@@ -912,18 +983,17 @@
 
   <!-- ── BLOCO 4: META ADS ─────────────────────────────────── -->
   <div class="section-label"><svg class="ri ri-broadcast-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-broadcast-line"/></svg> Meta Ads</div>
-  <div class="kpi-group cols-5 kpi-row-gap" style="margin-bottom:24px">
-    <div class="kpi gold">
-      <span class="kpi-icon"><svg class="ri ri-trophy-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-trophy-line"/></svg></span>
-      <div class="kpi-label">ROAS</div>
-      <div class="kpi-value lg" id="kpi-roas">—</div>
-      <div class="kpi-sub">Retorno sobre investimento</div>
-    </div>
-    <div class="kpi red">
-      <span class="kpi-icon"><svg class="ri ri-coin-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-coin-line"/></svg></span>
-      <div class="kpi-label">CAC</div>
-      <div class="kpi-value" id="kpi-cac">—</div>
-      <div class="kpi-sub">Custo de aquisição</div>
+  <div class="kpi-group cols-4 kpi-row-gap" style="margin-bottom:24px">
+    <div class="kpi green">
+      <span class="kpi-icon"><svg class="ri ri-group-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-group-line"/></svg></span>
+      <div class="kpi-label" style="display:flex;align-items:center;justify-content:space-between;gap:4px">
+        <span>Leads</span>
+        <button class="kpi-filter-btn" id="btn-filter-leads" onclick="openProdFilter(this)" title="Filtrar por produto">
+          <svg class="ri ri-arrow-down-s-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-arrow-down-s-line"/></svg>
+        </button>
+      </div>
+      <div class="kpi-value lg" id="kpi-leads">—</div>
+      <div class="kpi-sub"><span class="kpi-filter-badge all" id="filter-badge-leads">Todos os produtos</span></div>
     </div>
     <div class="kpi orange">
       <span class="kpi-icon"><svg class="ri ri-message-2-line" viewBox="0 0 24 24" aria-hidden="true"><use href="#ri-message-2-line"/></svg></span>
@@ -1591,17 +1661,19 @@ function render(){
   document.getElementById('kpi-conv').textContent         = Pct(convRate);
   document.getElementById('kpi-leads-sub').textContent    = 'Leads no período: '+tLeads;
   document.getElementById('kpi-ticket').textContent       = BRL(ticket);
+  document.getElementById('kpi-cac').textContent          = BRL2(cac);
   // KPIs faturamento
   document.getElementById('kpi-fat-total').textContent    = BRL(tFat);
   document.getElementById('kpi-fat-novos').textContent    = BRL(tFatN);
   document.getElementById('kpi-fat-rec').textContent      = BRL(tFatR);
   document.getElementById('kpi-lucro').textContent        = BRL(lucro);
-  // KPIs Meta
-  document.getElementById('kpi-roas').textContent = X(roas);
-  document.getElementById('kpi-cac').textContent  = BRL2(cac);
-  document.getElementById('kpi-cpl').textContent  = BRL2(cpl);
-  document.getElementById('kpi-ctr').textContent  = Pct(avg(ctr));
-  document.getElementById('kpi-cpm').textContent  = BRL2(avg(cpm));
+  // KPIs Meta Ads — base values (overridden by updateMetaAdsKpis if filter is active)
+  document.getElementById('kpi-leads').textContent = tLeads;
+  document.getElementById('kpi-cpl').textContent   = BRL2(cpl);
+  document.getElementById('kpi-ctr').textContent   = Pct(avg(ctr));
+  document.getElementById('kpi-cpm').textContent   = BRL2(avg(cpm));
+  // Re-apply product filter if one is active (or if campaign data already loaded)
+  if (typeof updateMetaAdsKpis === 'function') updateMetaAdsKpis();
 
   // Chart 1: invest × fat total
   kill('main');
@@ -2812,6 +2884,198 @@ async function loadSalesFromSheets() {
   renderAnalytics();
 }
 
+// ── FILTRO DE PRODUTO: Meta Ads (shared, afeta todas as métricas) ────────────
+
+const PRODUTOS = [
+  { nome: 'Conecta Canadá',         cod: '[conecta canadá]'         },
+  { nome: 'Café com Vistologista',  cod: '[café com vistologista]'  },
+  { nome: 'Assessoria para Vistos', cod: '[assessoria]'             },
+  { nome: 'Viagem Estratégica',     cod: '[viagem estratégica]'     },
+  { nome: 'Live Semanal',           cod: '[lives]'                  },
+  { nome: 'FOIA',                   cod: '[foia]'                   },
+  { nome: 'Haiti',                  cod: '[haiti]'                  },
+  { nome: 'Processo Seletivo',      cod: '[processo seletivo]'      },
+  { nome: 'Consulta EUA',           cod: '[consulta eua]'           },
+];
+
+// Campaign-level data from ?action=campanhas: [{date, campaign_name, type, spend, leads, impressions, ctr, cpm}]
+let CAMP_DATA = [];
+
+// Currently pending selection in the open panel (applied only when "Aplicar" is clicked)
+let prodFilterPending = new Set(); // empty = all
+
+// Currently applied filter (drives KPI display)
+let prodFilterActive  = new Set(); // empty = all
+
+// Which button last opened the panel (to restore focus)
+let _filterOpenerBtn  = null;
+
+/* ── Open / close the shared panel ── */
+function openProdFilter(btn) {
+  const panel = document.getElementById('prod-filter-panel');
+  const isOpen = panel.classList.contains('open');
+
+  if (isOpen && _filterOpenerBtn === btn) {
+    closeProdFilter(); return;
+  }
+  _filterOpenerBtn = btn;
+
+  // Copy active filter to pending so the panel reflects current state
+  prodFilterPending = new Set(prodFilterActive);
+
+  // Position the panel below the button (fixed coords)
+  const rect = btn.getBoundingClientRect();
+  const panelW = 234;
+  let left = rect.left;
+  if (left + panelW > window.innerWidth - 8) left = window.innerWidth - panelW - 8;
+  panel.style.top  = (rect.bottom + 6) + 'px';
+  panel.style.left = Math.max(8, left) + 'px';
+
+  // Mark all filter buttons open
+  document.querySelectorAll('.kpi-filter-btn').forEach(b => b.classList.remove('open'));
+  btn.classList.add('open');
+
+  renderProdFilterList();
+  panel.classList.add('open');
+}
+
+function closeProdFilter() {
+  document.getElementById('prod-filter-panel').classList.remove('open');
+  document.querySelectorAll('.kpi-filter-btn').forEach(b => b.classList.remove('open'));
+  _filterOpenerBtn = null;
+}
+
+// Close on outside click
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('prod-filter-panel');
+  if (!panel || !panel.classList.contains('open')) return;
+  if (panel.contains(e.target)) return;
+  if ([...document.querySelectorAll('.kpi-filter-btn')].some(b => b.contains(e.target))) return;
+  closeProdFilter();
+});
+
+/* ── Render checkbox list ── */
+function renderProdFilterList() {
+  const list = document.getElementById('prod-filter-list');
+  if (!list) return;
+  const hasCamp = CAMP_DATA.length > 0;
+
+  list.innerHTML = PRODUTOS.map(p => {
+    const isChecked = prodFilterPending.size === 0 || prodFilterPending.has(p.cod);
+    const hasData   = hasCamp
+      ? CAMP_DATA.some(c => c.type === 'leads' && c.campaign_name.toLowerCase().includes(p.cod))
+      : true;
+    const dim = hasCamp && !hasData ? ' style="opacity:0.38"' : '';
+    const noDataLabel = hasCamp && !hasData
+      ? '<span style="font-size:9px;color:var(--white40);margin-left:auto">sem dados</span>' : '';
+
+    return `<div class="kfp-item${isChecked ? ' checked' : ''}"${dim} onclick="prodFilterToggle(event,'${p.cod.replace(/\[/g,'\[').replace(/\]/g,'\]')}',this)">
+      <span class="kfp-check"></span>
+      <span>${p.nome}</span>${noDataLabel}
+    </div>`;
+  }).join('');
+}
+
+/* ── Toggle one product in the pending set ── */
+function prodFilterToggle(e, cod, el) {
+  e.stopPropagation(); // evita que o click bubbleie para o document listener e feche o painel
+  // decode escaped brackets back
+  cod = cod.replace(/\\[/g,'[').replace(/\\]/g,']');
+
+  if (prodFilterPending.size === 0) {
+    // Was "all" → switch to "all except this one"
+    prodFilterPending = new Set(PRODUTOS.map(p => p.cod));
+    prodFilterPending.delete(cod);
+  } else if (prodFilterPending.has(cod)) {
+    prodFilterPending.delete(cod);
+    // If nothing left selected, reset to all
+    if (prodFilterPending.size === 0) prodFilterPending = new Set();
+  } else {
+    prodFilterPending.add(cod);
+    // If all are now selected, reset to "all"
+    if (prodFilterPending.size === PRODUTOS.length) prodFilterPending = new Set();
+  }
+  renderProdFilterList();
+}
+
+function prodFilterSelectAll() {
+  prodFilterPending = new Set();
+  renderProdFilterList();
+}
+
+/* ── Apply filter and update all Meta Ads KPIs ── */
+function applyProdFilter() {
+  prodFilterActive = new Set(prodFilterPending);
+  closeProdFilter();
+  updateFilterBadges();
+  updateMetaAdsKpis();
+}
+
+function updateFilterBadges() {
+  const isAll = prodFilterActive.size === 0;
+  const label = isAll
+    ? 'Todos os produtos'
+    : prodFilterActive.size === 1
+      ? PRODUTOS.find(p => prodFilterActive.has(p.cod))?.nome || '1 produto'
+      : prodFilterActive.size + ' produtos';
+  const cls = isAll ? 'kpi-filter-badge all' : 'kpi-filter-badge';
+
+  ['filter-badge-invest','filter-badge-leads'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = label; el.className = cls; }
+  });
+}
+
+/* ── Compute filtered metrics from CAMP_DATA ── */
+function computeFilteredMetaMetrics() {
+  const allDays = new Set(genDays(DATA_DAYS));
+
+  if (CAMP_DATA.length === 0 || prodFilterActive.size === 0) {
+    // No campaign data or "all" selected → use aggregated RAW
+    const tInvL  = sum(rng(RAW.inv_leads));
+    const tLeads = sum(rng(RAW.leads));
+    return {
+      invLeads: tInvL,
+      leads:    tLeads,
+      cpl:      tLeads > 0 ? tInvL / tLeads : 0,
+      ctr:      avg(rng(RAW.ctr)),
+      cpm:      avg(rng(RAW.cpm)),
+      fromCamp: false,
+    };
+  }
+
+  const active  = prodFilterActive;
+  const matches = CAMP_DATA.filter(c => {
+    if (!allDays.has(c.date)) return false;
+    if (c.type !== 'leads')   return false;
+    const name = c.campaign_name.toLowerCase();
+    return [...active].some(cod => name.includes(cod));
+  });
+
+  const invLeads  = matches.reduce((s, c) => s + c.spend,       0);
+  const leads     = matches.reduce((s, c) => s + c.leads,       0);
+  const totalImp  = matches.reduce((s, c) => s + c.impressions, 0);
+  const cpl       = leads   > 0 ? invLeads / leads : 0;
+  // Impression-weighted CTR and CPM
+  const ctr = totalImp > 0
+    ? matches.reduce((s, c) => s + c.ctr * c.impressions, 0) / totalImp : 0;
+  const cpm = totalImp > 0
+    ? matches.reduce((s, c) => s + c.cpm * c.impressions, 0) / totalImp : 0;
+
+  return { invLeads, leads, cpl, ctr, cpm, fromCamp: true };
+}
+
+/* ── Write computed metrics to all Meta Ads KPI elements ── */
+function updateMetaAdsKpis() {
+  const m = computeFilteredMetaMetrics();
+  const el = id => document.getElementById(id);
+  if (el('kpi-invest-leads')) el('kpi-invest-leads').textContent = BRL(m.invLeads);
+  if (el('kpi-leads'))        el('kpi-leads').textContent        = m.leads;
+  if (el('kpi-cpl'))          el('kpi-cpl').textContent          = BRL2(m.cpl);
+  if (el('kpi-ctr'))          el('kpi-ctr').textContent          = Pct(m.ctr);
+  if (el('kpi-cpm'))          el('kpi-cpm').textContent          = BRL2(m.cpm);
+}
+
 // ── REFRESH: busca dados reais da planilha e atualiza o dashboard ─────────────
 async function refreshDashboard() {
   const btn  = document.getElementById('btn-refresh');
@@ -2819,7 +3083,7 @@ async function refreshDashboard() {
   btn.disabled = true;
   icon.style.animation = 'spin 0.7s linear infinite';
 
-  // Busca Meta Ads E Vendas em paralelo
+  // Busca Meta Ads, Vendas e Campanhas em paralelo
   await Promise.all([
     // ── Meta Ads ──────────────────────────────────────────────────────────
     (async () => {
@@ -2874,6 +3138,18 @@ async function refreshDashboard() {
         console.warn('Refresh Vendas:', err.message);
         if (syncEl) { syncEl.textContent = '✕ Erro: ' + err.message; syncEl.style.display = 'inline'; }
       }
+    })(),
+
+    // ── Campanhas (para filtro de produto) ────────────────────────────────
+    (async () => {
+      try {
+        const resp = await fetch(SHEETS_WEBAPP_URL + '?action=campanhas', { redirect: 'follow' });
+        const json = await resp.json();
+        if (json.ok && Array.isArray(json.rows) && json.rows.length > 0) {
+          CAMP_DATA = json.rows; // [{date, campaign_name, type, spend, leads, impressions, ctr, cpm}]
+          updateMetaAdsKpis();   // recalcula todos os KPIs Meta Ads com filtro ativo
+        }
+      } catch (err) { console.warn('Refresh Campanhas:', err.message); }
     })(),
   ]);
 
@@ -3061,7 +3337,7 @@ loadProductsFromSheets();
         <div class="fg">
           <label>Tipo de Recebimento</label>
           <select id="sv-tipo">
-            <option value="Nova Venda">🆕 Nova Venda</option>
+            <option value="Nova Venda">Nova Venda</option>
             <option value="Recorrência">Recebimento de Recorrência</option>
           </select>
         </div>
@@ -3223,7 +3499,7 @@ loadProductsFromSheets();
         <div class="fg">
           <label>Tipo de Recebimento</label>
           <select id="ev-tipo">
-            <option value="Nova Venda">🆕 Nova Venda</option>
+            <option value="Nova Venda">Nova Venda</option>
             <option value="Recorrência">Recebimento de Recorrência</option>
           </select>
         </div>
@@ -3301,5 +3577,16 @@ loadProductsFromSheets();
   </div>
 </div>
 
+
+<!-- ── Shared product filter panel (fixed position, outside overflow:hidden cards) ── -->
+<div id="prod-filter-panel">
+  <div class="kfp-title">Filtrar por produto · Meta Ads</div>
+  <div id="prod-filter-list"></div>
+  <div class="kfp-divider"></div>
+  <div class="kfp-actions">
+    <button class="kfp-action-btn" onclick="prodFilterSelectAll()">Todos</button>
+    <button class="kfp-action-btn primary" onclick="applyProdFilter()">Aplicar</button>
+  </div>
+</div>
 </body>
 </html>
