@@ -225,6 +225,18 @@
     td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--white80); font-weight: 600; }
     tr:hover td { background: rgba(255,255,255,0.04); }
     td.highlight { color: var(--gold); font-weight: 800; }
+    .th-sort {
+      cursor: pointer; user-select: none; white-space: nowrap;
+      transition: color 0.15s;
+    }
+    .th-sort:hover { color: rgba(255,255,255,0.75); }
+    .th-sort.sort-active { color: var(--gold); }
+    .sort-icon {
+      display: inline-block; font-size: 8px; margin-left: 4px;
+      opacity: 0.35; transition: opacity 0.15s;
+    }
+    .th-sort:hover .sort-icon { opacity: 0.7; }
+    .th-sort.sort-active .sort-icon { opacity: 1; color: var(--gold); }
     .pill { display: inline-block; padding: 3px 11px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
     .pill-green { background: rgba(34,197,94,0.2);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
     .pill-red   { background: rgba(232,49,42,0.2);  color: #f87171; border: 1px solid rgba(232,49,42,0.3); }
@@ -912,6 +924,85 @@
       </div>
       <button onclick="exportarCSV()" style="background:rgba(240,192,64,0.15);border:1.5px solid rgba(240,192,64,0.4);color:var(--gold);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:Montserrat,sans-serif">📥 Exportar CSV</button>
     </div>
+    <!-- Filtros da tabela -->
+    <div id="venda-filters" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px;padding:14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border)">
+      <div style="position:relative" id="fp-container">
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">Data</div>
+        <div id="fp-trigger" onclick="fpToggle()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;cursor:pointer;color:#fff;user-select:none;transition:border-color 0.15s">
+          <span>📅</span>
+          <span id="fp-label" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Todas</span>
+          <span id="fp-arrow" style="font-size:10px;color:var(--white40);transition:transform 0.2s">▾</span>
+        </div>
+        <!-- Mini-calendário do filtro -->
+        <div id="fp-panel" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:3000;background:#0c1860;border:1.5px solid rgba(255,255,255,0.15);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,0.7);overflow:hidden;width:max-content;min-width:340px">
+          <div style="display:flex">
+            <!-- Atalhos -->
+            <div style="padding:14px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:5px;min-width:120px">
+              <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--white40);padding:0 4px 4px;margin-bottom:2px">Atalhos</div>
+              <button class="dp-preset" onclick="fpPreset(7)">7 dias</button>
+              <button class="dp-preset" onclick="fpPreset(14)">14 dias</button>
+              <button class="dp-preset" onclick="fpPreset(30)">30 dias</button>
+              <button class="dp-preset" onclick="fpPresetMonth('current')">Este mês</button>
+              <button class="dp-preset" onclick="fpPresetMonth('last')">Mês anterior</button>
+              <button class="dp-preset" onclick="fpClear()" style="margin-top:6px;background:rgba(232,49,42,0.15);color:#f87171">✕ Limpar</button>
+            </div>
+            <!-- Calendário -->
+            <div style="padding:12px 14px;flex:1">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <button class="dp-nav-btn" onclick="fpNav(-1)">‹</button>
+                <span id="fp-cal-title" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px"></span>
+                <button class="dp-nav-btn" onclick="fpNav(1)">›</button>
+              </div>
+              <div class="dp-grid" id="fp-grid"></div>
+            </div>
+          </div>
+          <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <span id="fp-hint" style="font-size:11px;color:var(--white40);font-weight:600">Selecione o <strong style="color:var(--gold)">início</strong></span>
+            <button class="dp-apply" onclick="fpApply()">Aplicar ✓</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">Tipo</div>
+        <select id="f-tipo" onchange="renderVendasTable()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;outline:none">
+          <option value="">Todos</option>
+          <option value="Nova Venda">Nova Venda</option>
+          <option value="Recorrência">Recorrência</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">Closer</div>
+        <input type="text" id="f-closer" placeholder="Nome..." oninput="renderVendasTable()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;outline:none"/>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">SDR</div>
+        <input type="text" id="f-sdr" placeholder="Nome..." oninput="renderVendasTable()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;outline:none"/>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">Cliente</div>
+        <input type="text" id="f-cliente" placeholder="Nome..." oninput="renderVendasTable()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;outline:none"/>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">Tráfego</div>
+        <select id="f-trafego" onchange="renderVendasTable()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;outline:none">
+          <option value="">Todos</option>
+          <option value="Sim">Pago</option>
+          <option value="Não">Orgânico</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">Afiliado</div>
+        <select id="f-afiliado" onchange="renderVendasTable()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;outline:none">
+          <option value="">Todos</option>
+          <option value="Sim">Sim</option>
+          <option value="Não">Não</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button onclick="limparFiltros()" style="width:100%;background:rgba(232,49,42,0.12);border:1px solid rgba(232,49,42,0.3);color:#f87171;border-radius:7px;padding:6px 9px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif;cursor:pointer">✕ Limpar</button>
+      </div>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
@@ -919,6 +1010,7 @@
             <th>Data</th>
             <th>Tipo</th>
             <th>Closer</th>
+            <th>SDR</th>
             <th>Cliente</th>
             <th>Serviço</th>
             <th>Vlr. Recebido</th>
@@ -945,11 +1037,11 @@
           <thead>
             <tr>
               <th>Afiliado</th>
-              <th>V. Novas</th>
-              <th>V. Recorr.</th>
-              <th>Total</th>
-              <th>Faturamento</th>
-              <th>Ticket Médio</th>
+              <th class="th-sort" id="th-afil-vn"     onclick="setSort('afil','vn')">V. Novas <span class="sort-icon" id="si-afil-vn">⇅</span></th>
+              <th class="th-sort" id="th-afil-vr"     onclick="setSort('afil','vr')">V. Recorr. <span class="sort-icon" id="si-afil-vr">⇅</span></th>
+              <th class="th-sort" id="th-afil-total"  onclick="setSort('afil','total')">Total <span class="sort-icon" id="si-afil-total">⇅</span></th>
+              <th class="th-sort sort-active" id="th-afil-fat" onclick="setSort('afil','fat')">Faturamento <span class="sort-icon" id="si-afil-fat">▼</span></th>
+              <th class="th-sort" id="th-afil-ticket" onclick="setSort('afil','ticket')">Ticket Médio <span class="sort-icon" id="si-afil-ticket">⇅</span></th>
             </tr>
           </thead>
           <tbody id="tbody-afiliados"></tbody>
@@ -965,11 +1057,11 @@
           <thead>
             <tr>
               <th>Origem</th>
-              <th>V. Novas</th>
-              <th>V. Recorr.</th>
-              <th>Total</th>
-              <th>Faturamento</th>
-              <th>% do Total</th>
+              <th class="th-sort" id="th-traf-vn"    onclick="setSort('traf','vn')">V. Novas <span class="sort-icon" id="si-traf-vn">⇅</span></th>
+              <th class="th-sort" id="th-traf-vr"    onclick="setSort('traf','vr')">V. Recorr. <span class="sort-icon" id="si-traf-vr">⇅</span></th>
+              <th class="th-sort" id="th-traf-total" onclick="setSort('traf','total')">Total <span class="sort-icon" id="si-traf-total">⇅</span></th>
+              <th class="th-sort sort-active" id="th-traf-fat" onclick="setSort('traf','fat')">Faturamento <span class="sort-icon" id="si-traf-fat">▼</span></th>
+              <th class="th-sort" id="th-traf-pct"   onclick="setSort('traf','pct')">% do Total <span class="sort-icon" id="si-traf-pct">⇅</span></th>
             </tr>
           </thead>
           <tbody id="tbody-trafego"></tbody>
@@ -993,13 +1085,13 @@
         <thead>
           <tr>
             <th style="width:32px;text-align:center">#</th>
-            <th>Closer / SDR</th>
-            <th>V. Novas</th>
-            <th>V. Recorr.</th>
-            <th>Total</th>
-            <th>Faturamento</th>
-            <th>Ticket Médio</th>
-            <th>% do Fat.</th>
+            <th>Closer</th>
+            <th class="th-sort" id="th-closer-vn"     onclick="setSort('closer','vn')">V. Novas <span class="sort-icon" id="si-closer-vn">⇅</span></th>
+            <th class="th-sort" id="th-closer-vr"     onclick="setSort('closer','vr')">V. Recorr. <span class="sort-icon" id="si-closer-vr">⇅</span></th>
+            <th class="th-sort" id="th-closer-total"  onclick="setSort('closer','total')">Total <span class="sort-icon" id="si-closer-total">⇅</span></th>
+            <th class="th-sort sort-active" id="th-closer-fat" onclick="setSort('closer','fat')">Faturamento <span class="sort-icon" id="si-closer-fat">▼</span></th>
+            <th class="th-sort" id="th-closer-ticket" onclick="setSort('closer','ticket')">Ticket Médio <span class="sort-icon" id="si-closer-ticket">⇅</span></th>
+            <th class="th-sort" id="th-closer-pct"    onclick="setSort('closer','pct')">% do Fat. <span class="sort-icon" id="si-closer-pct">⇅</span></th>
           </tr>
         </thead>
         <tbody id="tbody-closers"></tbody>
@@ -1014,9 +1106,18 @@
   ════════════════════════════════════════════════════════════ -->
   <div id="page-produtos">
 
-    <!-- FILTRO DE PRODUTO -->
+    <!-- FILTRO DE PRODUTO — dropdown multi-seleção -->
     <div class="section-label">📦 Selecione o Produto</div>
-    <div class="product-filter" id="prod-filter"></div>
+    <div style="position:relative;margin-bottom:20px;max-width:400px" id="pf-container">
+      <div id="pf-trigger" onclick="pfToggle()" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 14px;cursor:pointer;user-select:none;transition:border-color 0.15s;font-family:Montserrat,sans-serif">
+        <span style="font-size:16px">📦</span>
+        <span id="pf-label" style="flex:1;font-size:13px;font-weight:700;color:#fff">Todos os produtos</span>
+        <span id="pf-arrow" style="font-size:11px;color:rgba(255,255,255,0.4);transition:transform 0.2s">▾</span>
+      </div>
+      <div id="pf-panel" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:3000;background:#0c1860;border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.6);overflow:hidden;font-family:Montserrat,sans-serif">
+        <div id="pf-options"></div>
+      </div>
+    </div>
 
     <!-- KPIs DO PRODUTO -->
     <div class="section-label" id="prod-section-title" style="margin-top:24px">📊 Métricas do Produto Selecionado</div>
@@ -1106,14 +1207,14 @@
           <thead>
             <tr>
               <th>Produto</th>
-              <th>Vendas Novas</th>
-              <th>Vendas Recorr.</th>
-              <th>Total Vendas</th>
-              <th>Ticket Médio</th>
-              <th>Fat. Leads Novos</th>
-              <th>Fat. Recorrente</th>
-              <th>Fat. Total</th>
-              <th>% do Total</th>
+              <th class="th-sort" id="th-prod-tVN"     onclick="setProdSort('tVN')">Vendas Novas <span class="sort-icon" id="si-prod-tVN">⇅</span></th>
+              <th class="th-sort" id="th-prod-tVR"     onclick="setProdSort('tVR')">Vendas Recorr. <span class="sort-icon" id="si-prod-tVR">⇅</span></th>
+              <th class="th-sort" id="th-prod-tvtotal" onclick="setProdSort('tvtotal')">Total Vendas <span class="sort-icon" id="si-prod-tvtotal">⇅</span></th>
+              <th class="th-sort" id="th-prod-ticket"  onclick="setProdSort('ticket')">Ticket Médio <span class="sort-icon" id="si-prod-ticket">⇅</span></th>
+              <th class="th-sort" id="th-prod-tFN"     onclick="setProdSort('tFN')">Fat. Leads Novos <span class="sort-icon" id="si-prod-tFN">⇅</span></th>
+              <th class="th-sort" id="th-prod-tFR"     onclick="setProdSort('tFR')">Fat. Recorrente <span class="sort-icon" id="si-prod-tFR">⇅</span></th>
+              <th class="th-sort sort-active" id="th-prod-tFat" onclick="setProdSort('tFat')">Fat. Total <span class="sort-icon" id="si-prod-tFat">▼</span></th>
+              <th class="th-sort" id="th-prod-pct"     onclick="setProdSort('pct')">% do Total <span class="sort-icon" id="si-prod-pct">⇅</span></th>
             </tr>
           </thead>
           <tbody id="prod-tbody"></tbody>
@@ -1656,6 +1757,7 @@ function salvarVenda() {
   const date     = document.getElementById('sv-date').value;
   const tipo     = document.getElementById('sv-tipo').value;
   const closer   = document.getElementById('sv-closer').value.trim();
+  const sdr      = document.getElementById('sv-sdr').value.trim();
   const cliente  = document.getElementById('sv-cliente').value.trim();
   const tel      = document.getElementById('sv-tel').value.trim();
   const servico  = document.getElementById('sv-servico').value;
@@ -1671,7 +1773,7 @@ function salvarVenda() {
   if (!cliente){ alert('Informe o nome do cliente.'); return; }
   if (!vlrRec) { alert('Informe o valor recebido.'); return; }
 
-  const venda = { id: Date.now(), date, tipo, closer, cliente, tel, servico, vlrSvc, vlrTotal, vlrRec, trafego, afiliado, nomeAfiliado, obs };
+  const venda = { id: Date.now(), date, tipo, closer, sdr, cliente, tel, servico, vlrSvc, vlrTotal, vlrRec, trafego, afiliado, nomeAfiliado, obs };
   const sales = getSales();
   sales.unshift(venda);
   saveSales(sales);
@@ -1682,7 +1784,7 @@ function salvarVenda() {
   setTimeout(() => { fb.style.display = 'none'; closeModal('venda'); }, 1500);
 
   // Limpa campos (mantém data e tipo)
-  ['sv-closer','sv-cliente','sv-tel','sv-vlr-servico','sv-vlr-total','sv-vlr-recebido','sv-obs']
+  ['sv-closer','sv-sdr','sv-cliente','sv-tel','sv-vlr-servico','sv-vlr-total','sv-vlr-recebido','sv-obs']
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('sv-servico').selectedIndex = 0;
   // Reset afiliado field
@@ -1698,11 +1800,179 @@ function salvarVenda() {
   if (SHEETS_WEBAPP_URL) fetch(SHEETS_WEBAPP_URL, {method:'POST', mode:'no-cors', body: JSON.stringify(venda)});
 }
 
+// ── MINI-CALENDÁRIO DO FILTRO DE DATA ────────────────────────────────────────
+let fpOpen = false;
+let fpStep = 0;          // 0 = escolhendo início, 1 = escolhendo fim
+let fpTempStart = null;
+let fpStart = null;      // null = sem filtro de data
+let fpEnd   = null;
+let fpCalYear  = new Date().getFullYear();
+let fpCalMonth = new Date().getMonth();
+
+function fpToggle() {
+  fpOpen = !fpOpen;
+  const panel   = document.getElementById('fp-panel');
+  const arrow   = document.getElementById('fp-arrow');
+  const trigger = document.getElementById('fp-trigger');
+  if (panel)   panel.style.display   = fpOpen ? 'block' : 'none';
+  if (arrow)   arrow.style.transform = fpOpen ? 'rotate(180deg)' : '';
+  if (trigger) trigger.style.borderColor = fpOpen ? 'rgba(232,49,42,0.6)' : '';
+  if (fpOpen) { fpStep = 0; fpTempStart = null; fpRenderCal(); }
+}
+function fpClose() {
+  fpOpen = false;
+  const panel   = document.getElementById('fp-panel');
+  const arrow   = document.getElementById('fp-arrow');
+  const trigger = document.getElementById('fp-trigger');
+  if (panel)   panel.style.display   = 'none';
+  if (arrow)   arrow.style.transform = '';
+  if (trigger) trigger.style.borderColor = '';
+}
+document.addEventListener('mousedown', e => {
+  const cont = document.getElementById('fp-container');
+  if (fpOpen && cont && !cont.contains(e.target)) fpClose();
+});
+function fpNav(dir) {
+  fpCalMonth += dir;
+  if (fpCalMonth > 11) { fpCalMonth = 0; fpCalYear++; }
+  if (fpCalMonth <  0) { fpCalMonth = 11; fpCalYear--; }
+  fpRenderCal();
+}
+function fpRenderCal() {
+  const title = new Date(fpCalYear, fpCalMonth, 1).toLocaleDateString('pt-BR', { month:'long', year:'numeric' });
+  const titleEl = document.getElementById('fp-cal-title');
+  if (titleEl) titleEl.textContent = title.charAt(0).toUpperCase() + title.slice(1);
+  const grid = document.getElementById('fp-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  ['D','S','T','Q','Q','S','S'].forEach(h => {
+    const el = document.createElement('div'); el.className = 'dp-hdr'; el.textContent = h; grid.appendChild(el);
+  });
+  const firstDow = new Date(fpCalYear, fpCalMonth, 1).getDay();
+  const daysInMonth = new Date(fpCalYear, fpCalMonth + 1, 0).getDate();
+  for (let i = 0; i < firstDow; i++) grid.appendChild(document.createElement('div'));
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(fpCalYear, fpCalMonth, day);
+    const dt = d0(date);
+    const cell = document.createElement('div');
+    cell.className = 'dp-cell';
+    cell.textContent = day;
+    if (fpStep === 0 && fpStart && fpEnd) {
+      const s = d0(fpStart), e = d0(fpEnd);
+      if (dt.getTime() === s.getTime())      cell.classList.add('range-start');
+      else if (dt.getTime() === e.getTime()) cell.classList.add('range-end');
+      else if (dt > s && dt < e)             cell.classList.add('in-range');
+    } else if (fpStep === 1 && fpTempStart) {
+      if (dt.getTime() === d0(fpTempStart).getTime()) cell.classList.add('range-start', 'picking-start');
+    }
+    const isToday = dt.getTime() === d0(new Date()).getTime();
+    if (isToday) cell.classList.add('today');
+    cell.onclick = (ev) => { ev.stopPropagation(); fpPickDate(date); };
+    grid.appendChild(cell);
+  }
+  fpUpdateHint();
+}
+function fpPickDate(date) {
+  if (fpStep === 0) {
+    fpTempStart = new Date(date);
+    fpStep = 1;
+    fpRenderCal();
+  } else {
+    let s = d0(fpTempStart), e = d0(date);
+    if (e < s) { const tmp = s; s = e; e = tmp; }
+    fpStart = s; fpEnd = e;
+    fpStep = 0; fpTempStart = null;
+    fpRenderCal();
+  }
+}
+function fpUpdateHint() {
+  const hint = document.getElementById('fp-hint');
+  if (!hint) return;
+  hint.innerHTML = fpStep === 0
+    ? 'Selecione o <strong style="color:var(--gold)">início</strong>'
+    : 'Agora selecione o <strong style="color:var(--gold)">fim</strong>';
+}
+function fpApply() {
+  const lbl = document.getElementById('fp-label');
+  if (lbl) {
+    if (!fpStart) { lbl.textContent = 'Todas'; }
+    else {
+      const s = fmtDate(fpStart);
+      const e = fpEnd && fpEnd.getTime() !== fpStart.getTime() ? ' → ' + fmtDate(fpEnd) : '';
+      lbl.textContent = s + e;
+    }
+  }
+  fpClose();
+  renderVendasTable();
+}
+function fpPreset(days) {
+  const end = d0(new Date());
+  const start = d0(new Date()); start.setDate(start.getDate() - days + 1);
+  fpStart = start; fpEnd = end; fpStep = 0; fpTempStart = null;
+  fpCalYear = end.getFullYear(); fpCalMonth = end.getMonth();
+  fpRenderCal();
+}
+function fpPresetMonth(which) {
+  const now = new Date();
+  let y = now.getFullYear(), m = now.getMonth();
+  if (which === 'last') { m--; if (m < 0) { m = 11; y--; } }
+  fpStart = d0(new Date(y, m, 1));
+  fpEnd   = d0(new Date(y, m + 1, 0));
+  fpCalYear = y; fpCalMonth = m; fpStep = 0; fpTempStart = null;
+  fpRenderCal();
+}
+function fpClear() {
+  fpStart = null; fpEnd = null; fpStep = 0; fpTempStart = null;
+  const lbl = document.getElementById('fp-label'); if (lbl) lbl.textContent = 'Todas';
+  fpClose();
+  renderVendasTable();
+}
+
+function getFilterVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim().toLowerCase() : '';
+}
+function limparFiltros() {
+  ['f-closer','f-sdr','f-cliente'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['f-tipo','f-trafego','f-afiliado'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  fpStart = null; fpEnd = null; fpStep = 0; fpTempStart = null;
+  const lbl = document.getElementById('fp-label'); if (lbl) lbl.textContent = 'Todas';
+  renderVendasTable();
+}
 function renderVendasTable() {
   const tbody = document.getElementById('tbody-vendas');
-  const sales = getSales();
+  let sales = getSales();
+
+  // ── Aplicar filtros ──────────────────────────────────────────────────────
+  const fTipo    = getFilterVal('f-tipo');
+  const fCloser  = getFilterVal('f-closer');
+  const fSdr     = getFilterVal('f-sdr');
+  const fCliente = getFilterVal('f-cliente');
+  const fTraf    = getFilterVal('f-trafego');
+  const fAfil    = getFilterVal('f-afiliado');
+
+  // Filtro de data pelo mini-calendário
+  if (fpStart) {
+    const endLimit = fpEnd || fpStart;
+    sales = sales.filter(v => {
+      if (!v.date) return false;
+      const vd = d0(new Date(v.date + 'T00:00:00'));
+      return vd >= fpStart && vd <= endLimit;
+    });
+  }
+  if (fTipo)    sales = sales.filter(v => (v.tipo||'').toLowerCase().includes(fTipo));
+  if (fCloser)  sales = sales.filter(v => (v.closer||'').toLowerCase().includes(fCloser));
+  if (fSdr)     sales = sales.filter(v => (v.sdr||'').toLowerCase().includes(fSdr));
+  if (fCliente) sales = sales.filter(v => (v.cliente||'').toLowerCase().includes(fCliente));
+  if (fTraf)    sales = sales.filter(v => (v.trafego||'') === (fTraf === 'sim' ? 'Sim' : 'Não'));
+  if (fAfil)    sales = sales.filter(v => (v.afiliado||'') === (fAfil === 'sim' ? 'Sim' : 'Não'));
+
   if (!sales.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--white40);padding:28px;font-weight:600">Nenhuma venda registrada ainda</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--white40);padding:28px;font-weight:600">Nenhuma venda encontrada</td></tr>';
     return;
   }
   tbody.innerHTML = sales.slice(0, 100).map(v => `
@@ -1710,6 +1980,7 @@ function renderVendasTable() {
       <td>${v.date}</td>
       <td><span class="pill ${v.tipo === 'Nova Venda' ? 'pill-green' : 'pill-cyan'}">${v.tipo === 'Nova Venda' ? '🆕 Nova' : '🔁 Recorr.'}</span></td>
       <td>${v.closer || '—'}</td>
+      <td>${v.sdr || '—'}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.cliente}</td>
       <td>${v.servico || '—'}</td>
       <td class="highlight">${BRL(v.vlrRec)}</td>
@@ -1747,6 +2018,32 @@ function excluirVenda(id) {
   renderAnalytics();
 }
 
+// ── ORDENAÇÃO DAS TABELAS DE ANALYTICS ───────────────────────────────────────
+// dir: -1 = decrescente (padrão), 1 = crescente
+const sortState = {
+  afil:   { col: 'fat', dir: -1 },
+  traf:   { col: 'fat', dir: -1 },
+  closer: { col: 'fat', dir: -1 },
+};
+function setSort(table, col) {
+  if (sortState[table].col === col) {
+    sortState[table].dir *= -1;
+  } else {
+    sortState[table].col = col;
+    sortState[table].dir = -1;
+  }
+  renderAnalytics();
+}
+function updateSortIcons(table) {
+  const { col, dir } = sortState[table];
+  document.querySelectorAll(`[id^="th-${table}-"]`).forEach(th => th.classList.remove('sort-active'));
+  document.querySelectorAll(`[id^="si-${table}-"]`).forEach(el => el.textContent = '⇅');
+  const activeTh = document.getElementById(`th-${table}-${col}`);
+  const activeSi = document.getElementById(`si-${table}-${col}`);
+  if (activeTh) activeTh.classList.add('sort-active');
+  if (activeSi) activeSi.textContent = dir === -1 ? '▼' : '▲';
+}
+
 function renderAnalytics() {
   const sales = getSalesInRange();
   const tFatTotal = sales.reduce((s, v) => s + (parseFloat(v.vlrRec) || 0), 0);
@@ -1762,24 +2059,25 @@ function renderAnalytics() {
     if (v.tipo === 'Nova Venda') { byAfil[key].vn++; byAfil[key].fat += val; }
     else                         { byAfil[key].vr++; byAfil[key].fat += val; }
   });
-  const afilRows = Object.entries(byAfil)
-    .sort((a,b) => b[1].fat - a[1].fat)
-    .map(([nome, d]) => {
-      const total  = d.vn + d.vr;
-      const ticket = d.vn > 0 ? d.fat / d.vn : 0;
-      return `<tr>
-        <td><span style="font-weight:700">${nome}</span></td>
-        <td>${d.vn}</td>
-        <td>${d.vr}</td>
-        <td style="font-weight:700">${total}</td>
-        <td class="highlight">${BRL(d.fat)}</td>
-        <td style="color:var(--white40)">${BRL(ticket)}</td>
-      </tr>`;
-    });
+  const afilData = Object.entries(byAfil).map(([nome, d]) => ({
+    nome, vn: d.vn, vr: d.vr, total: d.vn + d.vr, fat: d.fat,
+    ticket: d.vn > 0 ? d.fat / d.vn : 0,
+  }));
+  const { col: aCol, dir: aDir } = sortState.afil;
+  afilData.sort((a, b) => (a[aCol] - b[aCol]) * aDir);
+  const afilRows = afilData.map(d => `<tr>
+    <td><span style="font-weight:700">${d.nome}</span></td>
+    <td>${d.vn}</td>
+    <td>${d.vr}</td>
+    <td style="font-weight:700">${d.total}</td>
+    <td class="highlight">${BRL(d.fat)}</td>
+    <td style="color:var(--white40)">${BRL(d.ticket)}</td>
+  </tr>`);
   const tbodyAfil = document.getElementById('tbody-afiliados');
   if (tbodyAfil) tbodyAfil.innerHTML = afilRows.length
     ? afilRows.join('')
     : '<tr><td colspan="6" style="text-align:center;color:var(--white40);padding:20px">Sem dados no período</td></tr>';
+  updateSortIcons('afil');
 
   // ── Tabela por Tráfego ────────────────────────────────────────────────────
   const trafMap = {
@@ -1792,24 +2090,26 @@ function renderAnalytics() {
     if (v.tipo === 'Nova Venda') { trafMap[key].vn++; trafMap[key].fat += val; }
     else                         { trafMap[key].vr++; trafMap[key].fat += val; }
   });
-  const trafRows = Object.values(trafMap)
-    .sort((a,b) => b.fat - a.fat)
-    .map(d => {
-      const total = d.vn + d.vr;
-      const pct   = tFatTotal > 0 ? (d.fat / tFatTotal * 100).toFixed(1) : '0.0';
-      return `<tr>
-        <td><span style="font-weight:700">${d.label}</span></td>
-        <td>${d.vn}</td>
-        <td>${d.vr}</td>
-        <td style="font-weight:700">${total}</td>
-        <td class="highlight">${BRL(d.fat)}</td>
-        <td style="color:var(--white40)">${pct}%</td>
-      </tr>`;
-    });
+  const trafData = Object.values(trafMap).map(d => {
+    const total = d.vn + d.vr;
+    const pct   = tFatTotal > 0 ? (d.fat / tFatTotal * 100) : 0;
+    return { label: d.label, vn: d.vn, vr: d.vr, total, fat: d.fat, pct };
+  });
+  const { col: tCol, dir: tDir } = sortState.traf;
+  trafData.sort((a, b) => (a[tCol] - b[tCol]) * tDir);
+  const trafRows = trafData.map(d => `<tr>
+    <td><span style="font-weight:700">${d.label}</span></td>
+    <td>${d.vn}</td>
+    <td>${d.vr}</td>
+    <td style="font-weight:700">${d.total}</td>
+    <td class="highlight">${BRL(d.fat)}</td>
+    <td style="color:var(--white40)">${d.pct.toFixed(1)}%</td>
+  </tr>`);
   const tbodyTraf = document.getElementById('tbody-trafego');
   if (tbodyTraf) tbodyTraf.innerHTML = trafRows.length
     ? trafRows.join('')
     : '<tr><td colspan="6" style="text-align:center;color:var(--white40);padding:20px">Sem dados no período</td></tr>';
+  updateSortIcons('traf');
 
   // ── Tabela por Closer ─────────────────────────────────────────────────────
   const byCloser = {};
@@ -1820,39 +2120,41 @@ function renderAnalytics() {
     if (v.tipo === 'Nova Venda') { byCloser[key].vn++; byCloser[key].fat += val; }
     else                         { byCloser[key].vr++; byCloser[key].fat += val; }
   });
-
+  const closerData = Object.entries(byCloser).map(([nome, d]) => {
+    const total  = d.vn + d.vr;
+    const ticket = d.vn > 0 ? d.fat / d.vn : 0;
+    const pct    = tFatTotal > 0 ? (d.fat / tFatTotal * 100) : 0;
+    return { nome, vn: d.vn, vr: d.vr, total, fat: d.fat, ticket, pct };
+  });
+  const { col: cCol, dir: cDir } = sortState.closer;
+  closerData.sort((a, b) => (a[cCol] - b[cCol]) * cDir);
   const medals = ['🥇','🥈','🥉'];
-  const closerRows = Object.entries(byCloser)
-    .sort((a,b) => b[1].fat - a[1].fat)
-    .map(([nome, d], i) => {
-      const total  = d.vn + d.vr;
-      const ticket = d.vn > 0 ? d.fat / d.vn : 0;
-      const pct    = tFatTotal > 0 ? (d.fat / tFatTotal * 100).toFixed(1) : '0.0';
-      const rank   = medals[i] || `<span style="color:var(--white40);font-size:12px">${i+1}</span>`;
-      return `<tr>
-        <td style="text-align:center;font-size:16px">${rank}</td>
-        <td><span style="font-weight:800;font-size:13px">${nome}</span></td>
-        <td>${d.vn}</td>
-        <td>${d.vr}</td>
-        <td style="font-weight:700">${total}</td>
-        <td class="highlight">${BRL(d.fat)}</td>
-        <td style="color:var(--white40)">${BRL(ticket)}</td>
-        <td style="color:var(--white40)">${pct}%</td>
-      </tr>`;
-    });
-
+  const closerRows = closerData.map((d, i) => {
+    const rank = medals[i] || `<span style="color:var(--white40);font-size:12px">${i+1}</span>`;
+    return `<tr>
+      <td style="text-align:center;font-size:16px">${rank}</td>
+      <td><span style="font-weight:800;font-size:13px">${d.nome}</span></td>
+      <td>${d.vn}</td>
+      <td>${d.vr}</td>
+      <td style="font-weight:700">${d.total}</td>
+      <td class="highlight">${BRL(d.fat)}</td>
+      <td style="color:var(--white40)">${BRL(d.ticket)}</td>
+      <td style="color:var(--white40)">${d.pct.toFixed(1)}%</td>
+    </tr>`;
+  });
   const tbodyClosers = document.getElementById('tbody-closers');
   if (tbodyClosers) tbodyClosers.innerHTML = closerRows.length
     ? closerRows.join('')
     : '<tr><td colspan="8" style="text-align:center;color:var(--white40);padding:24px;font-weight:600">Sem dados no período</td></tr>';
+  updateSortIcons('closer');
 }
 
 function exportarCSV() {
   const sales = getSales();
   if (!sales.length) { alert('Nenhuma venda para exportar.'); return; }
-  const cols = ['Data','Tipo','Closer','Cliente','Telefone','Serviço','Vlr.Serviço','Vlr.Total','Vlr.Recebido','Tráfego','Afiliado','Nome Afiliado','Obs'];
+  const cols = ['Data','Tipo','Closer','SDR','Cliente','Telefone','Serviço','Vlr.Serviço','Vlr.Total','Vlr.Recebido','Tráfego','Afiliado','Nome Afiliado','Obs'];
   const rows = sales.map(v =>
-    [v.date,v.tipo,v.closer,v.cliente,v.tel,v.servico,v.vlrSvc,v.vlrTotal,v.vlrRec,v.trafego,v.afiliado,v.nomeAfiliado||'',v.obs]
+    [v.date,v.tipo,v.closer,v.sdr||'',v.cliente,v.tel,v.servico,v.vlrSvc,v.vlrTotal,v.vlrRec,v.trafego,v.afiliado,v.nomeAfiliado||'',v.obs]
     .map(x => `"${String(x||'').replace(/"/g,'""')}"`).join(','));
   const csv = [cols.join(','), ...rows].join('\n');
   const a = document.createElement('a');
@@ -1877,66 +2179,162 @@ function setPage(page, el) {
 
 // ── PÁGINA POR PRODUTO (dados reais) ─────────────────────────────────────────
 
-let selectedProd = 'todos';
+// ── PRODUTO FILTER DROPDOWN (multi-seleção) ───────────────────────────────────
+let selectedProds = ['todos']; // 'todos' ou array de nomes
+let pfOpen = false;
+
+function pfToggle() {
+  pfOpen = !pfOpen;
+  const panel = document.getElementById('pf-panel');
+  const arrow = document.getElementById('pf-arrow');
+  const trigger = document.getElementById('pf-trigger');
+  if (pfOpen) {
+    pfUpdateOptions();
+    panel.style.display = 'block';
+    arrow.style.transform = 'rotate(180deg)';
+    trigger.style.borderColor = 'rgba(240,192,64,0.5)';
+  } else {
+    panel.style.display = 'none';
+    arrow.style.transform = '';
+    trigger.style.borderColor = '';
+  }
+}
+function pfClose() {
+  pfOpen = false;
+  const panel = document.getElementById('pf-panel');
+  const arrow = document.getElementById('pf-arrow');
+  const trigger = document.getElementById('pf-trigger');
+  if (panel)   panel.style.display   = 'none';
+  if (arrow)   arrow.style.transform = '';
+  if (trigger) trigger.style.borderColor = '';
+}
+document.addEventListener('mousedown', e => {
+  const cont = document.getElementById('pf-container');
+  if (pfOpen && cont && !cont.contains(e.target)) pfClose();
+});
+function pfToggleItem(name) {
+  if (name === 'todos') {
+    selectedProds = ['todos'];
+  } else {
+    selectedProds = selectedProds.filter(p => p !== 'todos');
+    if (selectedProds.includes(name)) {
+      selectedProds = selectedProds.filter(p => p !== name);
+      if (selectedProds.length === 0) selectedProds = ['todos'];
+    } else {
+      selectedProds.push(name);
+    }
+  }
+  pfUpdateOptions();
+  pfUpdateLabel();
+  renderProdutos();
+}
+function pfUpdateOptions() {
+  const allProds = buildProdData();
+  const el = document.getElementById('pf-options');
+  if (!el) return;
+  const isTodos = selectedProds.includes('todos');
+  const itemStyle = 'display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background 0.12s;font-size:13px;font-weight:700';
+  el.innerHTML =
+    `<div onclick="pfToggleItem('todos')" style="${itemStyle};${isTodos?'background:rgba(240,192,64,0.12)':''}border-bottom:1px solid rgba(255,255,255,0.07)">
+       <span style="font-size:15px;color:${isTodos?'#f0c040':'rgba(255,255,255,0.3)'}">${isTodos?'☑':'☐'}</span>
+       <span style="color:${isTodos?'#f0c040':'rgba(255,255,255,0.7)'}">🔍 Todos os produtos</span>
+     </div>` +
+    allProds.map(p => {
+      const checked = !isTodos && selectedProds.includes(p.nome);
+      const safeName = p.nome.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `<div onclick="pfToggleItem('${safeName}')" style="${itemStyle};${checked?'background:rgba(255,255,255,0.05)':''}">
+        <span style="font-size:15px;color:${checked?p.cor:'rgba(255,255,255,0.3)'}">${checked?'☑':'☐'}</span>
+        <span style="color:${checked?p.cor:'rgba(255,255,255,0.7)'}">${p.emoji} ${p.nome}</span>
+      </div>`;
+    }).join('');
+}
+function pfUpdateLabel() {
+  const el = document.getElementById('pf-label');
+  if (!el) return;
+  if (selectedProds.includes('todos'))    el.textContent = 'Todos os produtos';
+  else if (selectedProds.length === 1)    el.textContent = selectedProds[0];
+  else                                    el.textContent = `${selectedProds.length} produtos selecionados`;
+}
+
+// ── SORT DA TABELA DE PRODUTOS ────────────────────────────────────────────────
+const prodSortState = { col: 'tFat', dir: -1 };
+function setProdSort(col) {
+  if (prodSortState.col === col) prodSortState.dir *= -1;
+  else { prodSortState.col = col; prodSortState.dir = -1; }
+  renderProdutos();
+}
+function updateProdSortIcons() {
+  const { col, dir } = prodSortState;
+  document.querySelectorAll('[id^="th-prod-"]').forEach(th => th.classList.remove('sort-active'));
+  document.querySelectorAll('[id^="si-prod-"]').forEach(el => el.textContent = '⇅');
+  const activeTh = document.getElementById(`th-prod-${col}`);
+  const activeSi = document.getElementById(`si-prod-${col}`);
+  if (activeTh) activeTh.classList.add('sort-active');
+  if (activeSi) activeSi.textContent = dir === -1 ? '▼' : '▲';
+}
 
 function renderProdutos(){
   const days     = rngDays();
   const labels   = days.map(lbl);
   const allProds = buildProdData();
-  const totalFat = allProds.reduce((a,p)=>a+p.tFat,0);
-  const totalVN  = allProds.reduce((a,p)=>a+p.tVN,0);
-  const totalVR  = allProds.reduce((a,p)=>a+p.tVR,0);
 
-  // Botões de filtro dinâmicos
-  const filterEl = document.getElementById('prod-filter');
-  filterEl.innerHTML = '';
-  const allBtn = document.createElement('button');
-  allBtn.className = 'prod-btn'+(selectedProd==='todos'?' active':'');
-  if(selectedProd==='todos') allBtn.style.background='#f0c040';
-  allBtn.textContent = '🔍 Todos os Produtos';
-  allBtn.onclick = ()=>{ selectedProd='todos'; renderProdutos(); };
-  filterEl.appendChild(allBtn);
+  // Aplica filtro de seleção
+  const displayProds = selectedProds.includes('todos')
+    ? allProds
+    : allProds.filter(p => selectedProds.includes(p.nome));
 
-  allProds.forEach(p=>{
-    const btn = document.createElement('button');
-    btn.className = 'prod-btn'+(selectedProd===p.nome?' active':'');
-    if(selectedProd===p.nome) btn.style.background=p.cor;
-    btn.textContent = p.emoji+' '+p.nome;
-    btn.onclick = ()=>{ selectedProd=p.nome; renderProdutos(); };
-    filterEl.appendChild(btn);
-  });
+  const totalFat = displayProds.reduce((a,p)=>a+p.tFat,0);
+  const totalVN  = displayProds.reduce((a,p)=>a+p.tVN,0);
+  const totalVR  = displayProds.reduce((a,p)=>a+p.tVR,0);
 
-  // KPIs
-  let d;
-  if(selectedProd==='todos'){
-    d = { tVN:totalVN, tVR:totalVR,
-      tFN:allProds.reduce((a,p)=>a+p.tFN,0),
-      tFR:allProds.reduce((a,p)=>a+p.tFR,0),
-      tFat:totalFat,
-      ticket: totalVN>0 ? allProds.reduce((a,p)=>a+p.tFN,0)/totalVN : 0 };
-    document.getElementById('prod-section-title').textContent='📊 Métricas Consolidadas — Todos os Produtos';
-  } else {
-    d = allProds.find(p=>p.nome===selectedProd) || {tVN:0,tVR:0,tFN:0,tFR:0,tFat:0,ticket:0,emoji:'📌'};
-    document.getElementById('prod-section-title').textContent=`${d.emoji||'📌'} ${d.nome||selectedProd}`;
-  }
+  // KPIs — agrega produtos selecionados
+  const tFN = displayProds.reduce((a,p)=>a+p.tFN,0);
+  const tFR = displayProds.reduce((a,p)=>a+p.tFR,0);
+  const d = { tVN:totalVN, tVR:totalVR, tFN, tFR, tFat:totalFat,
+    ticket: totalVN>0 ? tFN/totalVN : 0 };
+
+  const titleEl = document.getElementById('prod-section-title');
+  if (selectedProds.includes('todos'))       titleEl.textContent='📊 Métricas Consolidadas — Todos os Produtos';
+  else if (selectedProds.length === 1) {
+    const p = allProds.find(x=>x.nome===selectedProds[0]);
+    titleEl.textContent=`${p?.emoji||'📌'} ${selectedProds[0]}`;
+  } else titleEl.textContent=`📊 Métricas — ${selectedProds.length} Produtos Selecionados`;
+
+  // Totais de referência (todos os produtos) para percentuais
+  const allTotalFat = allProds.reduce((a,p)=>a+p.tFat,0);
+  const allTotalVN  = allProds.reduce((a,p)=>a+p.tVN,0);
+  const allTotalVR  = allProds.reduce((a,p)=>a+p.tVR,0);
 
   document.getElementById('p-vn').textContent       = d.tVN;
-  document.getElementById('p-vn-pct').textContent   = totalVN>0?(d.tVN/totalVN*100).toFixed(0)+'% do total':'—';
+  document.getElementById('p-vn-pct').textContent   = allTotalVN>0?(d.tVN/allTotalVN*100).toFixed(0)+'% do total':'—';
   document.getElementById('p-vr').textContent       = d.tVR;
-  document.getElementById('p-vr-pct').textContent   = totalVR>0?(d.tVR/totalVR*100).toFixed(0)+'% do total':'—';
+  document.getElementById('p-vr-pct').textContent   = allTotalVR>0?(d.tVR/allTotalVR*100).toFixed(0)+'% do total':'—';
   document.getElementById('p-ticket').textContent   = BRL2(d.ticket);
   document.getElementById('p-fat-total').textContent= BRL(d.tFat);
-  document.getElementById('p-fat-pct').textContent  = totalFat>0?(d.tFat/totalFat*100).toFixed(0)+'% do faturamento geral':'—';
+  document.getElementById('p-fat-pct').textContent  = allTotalFat>0?(d.tFat/allTotalFat*100).toFixed(0)+'% do faturamento geral':'—';
   document.getElementById('p-fat-novos').textContent= BRL(d.tFN);
   document.getElementById('p-fat-rec').textContent  = BRL(d.tFR);
   document.getElementById('p-vtotal').textContent   = d.tVN+d.tVR;
 
-  // Chart: evolução
+  // Chart: evolução — empilhado para todos os selecionados
   kill('prod-evolucao');
-  if(selectedProd==='todos'){
+  if(displayProds.length === 1){
+    const arr = buildProdDailyArrays(days, displayProds[0].nome);
     charts['prod-evolucao'] = new Chart(document.getElementById('chart-prod-evolucao'),{
       type:'bar',
-      data:{labels, datasets: allProds.map(p=>{
+      data:{labels, datasets:[
+        {label:'Fat. Novas',      data:arr.fat_novos, backgroundColor:displayProds[0].cor+'cc', borderRadius:4},
+        {label:'Fat. Recorrente', data:arr.fat_rec,   backgroundColor:displayProds[0].cor+'55', borderRadius:4},
+      ]},
+      options:{responsive:true,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11},color:'rgba(255,255,255,0.6)'}}},
+        scales:{x:{stacked:true,ticks:{font:{size:10}},grid:{display:false}},
+          y:{stacked:true,ticks:{callback:v=>'R$'+(v/1000).toFixed(0)+'k',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}}}
+    });
+  } else {
+    charts['prod-evolucao'] = new Chart(document.getElementById('chart-prod-evolucao'),{
+      type:'bar',
+      data:{labels, datasets: displayProds.map(p=>{
         const arr=buildProdDailyArrays(days,p.nome);
         return { label:p.emoji+' '+p.nome.split(' ').slice(0,2).join(' '),
           data:arr.fat_novos.map((v,i)=>v+arr.fat_rec[i]),
@@ -1947,38 +2345,23 @@ function renderProdutos(){
         scales:{x:{stacked:true,ticks:{font:{size:10}},grid:{display:false}},
           y:{stacked:true,ticks:{callback:v=>'R$'+(v/1000).toFixed(0)+'k',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}}}
     });
-  } else {
-    const arr=buildProdDailyArrays(days,selectedProd);
-    const prod=allProds.find(p=>p.nome===selectedProd)||{cor:'#94a3b8'};
-    charts['prod-evolucao'] = new Chart(document.getElementById('chart-prod-evolucao'),{
-      type:'bar',
-      data:{labels, datasets:[
-        {label:'Fat. Novas',      data:arr.fat_novos, backgroundColor:prod.cor+'cc', borderRadius:4},
-        {label:'Fat. Recorrente', data:arr.fat_rec,   backgroundColor:prod.cor+'55', borderRadius:4},
-      ]},
-      options:{responsive:true,interaction:{mode:'index',intersect:false},
-        plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11},color:'rgba(255,255,255,0.6)'}}},
-        scales:{x:{stacked:true,ticks:{font:{size:10}},grid:{display:false}},
-          y:{stacked:true,ticks:{callback:v=>'R$'+(v/1000).toFixed(0)+'k',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}}}
-    });
   }
 
   // Chart: donut
   kill('prod-donut');
-  const tFN=d.tFN||0, tFR=d.tFR||0;
   charts['prod-donut'] = new Chart(document.getElementById('chart-prod-donut'),{
     type:'doughnut',
     data:{labels:['Fat. Leads Novos','Fat. Recorrente'],
-      datasets:[{data:[tFN,tFR],
+      datasets:[{data:[d.tFN,d.tFR],
         backgroundColor:['rgba(34,197,94,0.8)','rgba(45,212,191,0.7)'],
         borderColor:['#22c55e','#2dd4bf'],borderWidth:2,hoverOffset:8}]},
     options:{responsive:true,plugins:{
       legend:{position:'bottom',labels:{boxWidth:12,font:{size:11},color:'rgba(255,255,255,0.6)'}},
-      tooltip:{callbacks:{label:c=>` ${c.label}: ${BRL(c.raw)} (${tFN+tFR>0?(c.raw/(tFN+tFR)*100).toFixed(1):0}%)`}}}}
+      tooltip:{callbacks:{label:c=>` ${c.label}: ${BRL(c.raw)} (${d.tFN+d.tFR>0?(c.raw/(d.tFN+d.tFR)*100).toFixed(1):0}%)`}}}}
   });
 
-  // Charts comparativos
-  const sortedFat=[...allProds].sort((a,b)=>b.tFat-a.tFat);
+  // Charts comparativos — usam sempre displayProds
+  const sortedFat=[...displayProds].sort((a,b)=>b.tFat-a.tFat);
 
   kill('comp-fat');
   charts['comp-fat'] = new Chart(document.getElementById('chart-comp-fat'),{
@@ -2008,23 +2391,31 @@ function renderProdutos(){
         y:{stacked:true,ticks:{font:{size:10}},grid:{display:false}}}}
   });
 
-  // Tabela comparativa
+  // Tabela comparativa — com ordenação
   const tbody = document.getElementById('prod-tbody');
-  if(!allProds.length){
-    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--white40);padding:28px;font-weight:600">Nenhuma venda registrada no período. Registre uma venda para ver os dados por produto.</td></tr>';
+  if(!displayProds.length){
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--white40);padding:28px;font-weight:600">Nenhuma venda registrada no período.</td></tr>';
+    updateProdSortIcons();
     return;
   }
-  tbody.innerHTML = sortedFat.map(p=>{
-    const pct = totalFat>0?(p.tFat/totalFat*100).toFixed(1)+'%':'0%';
-    return `<tr>
-      <td><span style="color:${p.cor}">${p.emoji} ${p.nome}</span></td>
-      <td>${p.tVN}</td><td>${p.tVR}</td><td>${p.tVN+p.tVR}</td>
-      <td>${BRL2(p.ticket)}</td>
-      <td>${BRL(p.tFN)}</td><td>${BRL(p.tFR)}</td>
-      <td class="highlight">${BRL(p.tFat)}</td>
-      <td><span class="pill pill-green">${pct}</span></td>
-    </tr>`;
-  }).join('');
+  // Monta array com todos os campos calculados para poder ordenar qualquer coluna
+  const prodTableData = displayProds.map(p => ({
+    ...p,
+    tvtotal: p.tVN + p.tVR,
+    pct: totalFat > 0 ? (p.tFat / totalFat * 100) : 0,
+  }));
+  const { col: pCol, dir: pDir } = prodSortState;
+  prodTableData.sort((a, b) => (a[pCol] - b[pCol]) * pDir);
+
+  tbody.innerHTML = prodTableData.map(p => `<tr>
+    <td><span style="color:${p.cor};font-weight:700">${p.emoji} ${p.nome}</span></td>
+    <td>${p.tVN}</td><td>${p.tVR}</td><td>${p.tvtotal}</td>
+    <td>${BRL2(p.ticket)}</td>
+    <td>${BRL(p.tFN)}</td><td>${BRL(p.tFR)}</td>
+    <td class="highlight">${BRL(p.tFat)}</td>
+    <td><span class="pill pill-green">${p.pct.toFixed(1)}%</span></td>
+  </tr>`).join('');
+  updateProdSortIcons();
 }
 // Init
 document.getElementById('last-update').textContent =
@@ -2270,7 +2661,7 @@ loadProductsFromSheets();
     </div>
     <div class="modal-body">
 
-      <div class="form-row cols-3">
+      <div class="form-row cols-4">
         <div class="fg">
           <label>Data do Recebimento</label>
           <input type="date" id="sv-date"/>
@@ -2283,8 +2674,12 @@ loadProductsFromSheets();
           </select>
         </div>
         <div class="fg">
-          <label>Closer / SDR</label>
-          <input type="text" id="sv-closer" placeholder="ex: Albert Taylor"/>
+          <label>Closer</label>
+          <input type="text" id="sv-closer" placeholder="ex: Albert"/>
+        </div>
+        <div class="fg">
+          <label>SDR</label>
+          <input type="text" id="sv-sdr" placeholder="ex: João"/>
         </div>
       </div>
 
