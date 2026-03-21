@@ -215,6 +215,11 @@
 
     /* TABLE */
     .table-wrap { overflow-x: auto; }
+    .table-wrap.table-limit { max-height: 258px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
+    .table-wrap.table-limit::-webkit-scrollbar { width: 5px; }
+    .table-wrap.table-limit::-webkit-scrollbar-track { background: transparent; }
+    .table-wrap.table-limit::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+    .table-wrap.table-limit thead th { position: sticky; top: 0; z-index: 2; background: #0e1c7a; box-shadow: 0 1px 0 rgba(255,255,255,0.1); }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
     th {
       text-align: left; padding: 10px 14px;
@@ -1003,7 +1008,7 @@
       </div>
     </div>
 
-    <div class="table-wrap">
+    <div class="table-wrap table-limit">
       <table>
         <thead>
           <tr>
@@ -1032,7 +1037,7 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:4px">🤝 Vendas por Afiliado</div>
       <div class="card-sub">Resultados no período selecionado</div>
-      <div class="table-wrap">
+      <div class="table-wrap table-limit">
         <table>
           <thead>
             <tr>
@@ -1052,7 +1057,7 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:4px">📡 Vendas por Tráfego</div>
       <div class="card-sub">Comparativo com e sem tráfego pago</div>
-      <div class="table-wrap">
+      <div class="table-wrap table-limit">
         <table>
           <thead>
             <tr>
@@ -1080,7 +1085,7 @@
         <div class="card-sub">Desempenho individual no período selecionado</div>
       </div>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap table-limit">
       <table>
         <thead>
           <tr>
@@ -1202,7 +1207,7 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:4px">📋 Comparativo por Produto</div>
       <div class="card-sub">Todas as métricas disponíveis por produto no período selecionado</div>
-      <div class="table-wrap">
+      <div class="table-wrap table-limit">
         <table class="prod-table">
           <thead>
             <tr>
@@ -1692,7 +1697,7 @@ function buildSalesDailyArrays(days) {
   days.forEach(d => { byDate[d] = { vn:0, vr:0, fatN:0, fatR:0 }; });
   sales.forEach(v => {
     if (!byDate[v.date]) return;
-    const val = parseFloat(v.vlrRec) || 0;
+    const val = numVal(v.vlrRec);
     if (v.tipo === 'Nova Venda') { byDate[v.date].vn++; byDate[v.date].fatN += val; }
     else                         { byDate[v.date].vr++; byDate[v.date].fatR += val; }
   });
@@ -1723,7 +1728,7 @@ function buildProdData() {
   sales.forEach(v => {
     const nome = v.servico || 'Outro';
     if (!byProd[nome]) byProd[nome] = { nome, tVN:0, tVR:0, tFN:0, tFR:0 };
-    const val = parseFloat(v.vlrRec) || 0;
+    const val = numVal(v.vlrRec);
     if (v.tipo === 'Nova Venda') { byProd[nome].tVN++; byProd[nome].tFN += val; }
     else                         { byProd[nome].tVR++; byProd[nome].tFR += val; }
   });
@@ -1740,7 +1745,7 @@ function buildProdDailyArrays(days, servico) {
   days.forEach(d => { byDate[d] = { fatN:0, fatR:0 }; });
   sales.forEach(v => {
     if (!byDate[v.date]) return;
-    const val = parseFloat(v.vlrRec) || 0;
+    const val = numVal(v.vlrRec);
     if (v.tipo === 'Nova Venda') byDate[v.date].fatN += val;
     else                         byDate[v.date].fatR += val;
   });
@@ -1771,6 +1776,14 @@ function parseBRL(str) {
   if (!str) return 0;
   // Remove "R$", espaços, pontos de milhar; troca vírgula decimal por ponto
   return parseFloat(str.replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+// Converte qualquer valor (número ou texto BRL "R$ X.XXX,XX") para número
+// Garante compatibilidade mesmo que a planilha retorne strings formatadas
+function numVal(x) {
+  if (x === null || x === undefined || x === '') return 0;
+  if (typeof x === 'number') return x;
+  return parseBRL(String(x));
 }
 
 // Preenche um campo BRL a partir de um número (usado na edição)
@@ -2181,7 +2194,7 @@ function updateSortIcons(table) {
 
 function renderAnalytics() {
   const sales = getSalesInRange();
-  const tFatTotal = sales.reduce((s, v) => s + (parseFloat(v.vlrRec) || 0), 0);
+  const tFatTotal = sales.reduce((s, v) => s + numVal(v.vlrRec), 0);
 
   // ── Tabela por Afiliado ───────────────────────────────────────────────────
   const byAfil = {};
@@ -2190,7 +2203,7 @@ function renderAnalytics() {
       ? (v.nomeAfiliado ? v.nomeAfiliado : '(sem nome)')
       : 'Direto';
     if (!byAfil[key]) byAfil[key] = { vn:0, vr:0, fat:0 };
-    const val = parseFloat(v.vlrRec) || 0;
+    const val = numVal(v.vlrRec);
     if (v.tipo === 'Nova Venda') { byAfil[key].vn++; byAfil[key].fat += val; }
     else                         { byAfil[key].vr++; byAfil[key].fat += val; }
   });
@@ -2221,7 +2234,7 @@ function renderAnalytics() {
   };
   sales.forEach(v => {
     const key = v.trafego === 'Sim' ? 'Sim' : 'Não';
-    const val = parseFloat(v.vlrRec) || 0;
+    const val = numVal(v.vlrRec);
     if (v.tipo === 'Nova Venda') { trafMap[key].vn++; trafMap[key].fat += val; }
     else                         { trafMap[key].vr++; trafMap[key].fat += val; }
   });
@@ -2251,7 +2264,7 @@ function renderAnalytics() {
   sales.forEach(v => {
     const key = v.closer && v.closer.trim() ? v.closer.trim() : '(sem nome)';
     if (!byCloser[key]) byCloser[key] = { vn:0, vr:0, fat:0 };
-    const val = parseFloat(v.vlrRec) || 0;
+    const val = numVal(v.vlrRec);
     if (v.tipo === 'Nova Venda') { byCloser[key].vn++; byCloser[key].fat += val; }
     else                         { byCloser[key].vr++; byCloser[key].fat += val; }
   });
