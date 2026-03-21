@@ -273,9 +273,9 @@
     .kpi-filter-btn:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); color: #fff; }
     .kpi-filter-btn svg.ri { width: 11px; height: 11px; transition: transform 0.2s; }
     .kpi-filter-btn.open svg.ri { transform: rotate(180deg); }
-    /* Shared floating panel — appended to body, position:fixed avoids overflow:hidden clipping */
+    /* Shared floating panel — position:absolute so it scrolls with the page */
     #prod-filter-panel {
-      display: none; position: fixed; z-index: 9999; width: 230px;
+      display: none; position: absolute; z-index: 9999; width: 230px;
       background: #0e1a5e; border: 1px solid rgba(255,255,255,0.22);
       border-radius: 13px; padding: 13px; box-shadow: 0 16px 48px rgba(0,0,0,0.65);
     }
@@ -2923,12 +2923,12 @@ function openProdFilter(btn) {
   // Copy active filter to pending so the panel reflects current state
   prodFilterPending = new Set(prodFilterActive);
 
-  // Position the panel below the button (fixed coords)
+  // Position the panel below the button (document-relative: viewport coords + scroll offset)
   const rect = btn.getBoundingClientRect();
   const panelW = 234;
-  let left = rect.left;
-  if (left + panelW > window.innerWidth - 8) left = window.innerWidth - panelW - 8;
-  panel.style.top  = (rect.bottom + 6) + 'px';
+  let left = rect.left + window.scrollX;
+  if (rect.left + panelW > window.innerWidth - 8) left = window.scrollX + window.innerWidth - panelW - 8;
+  panel.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
   panel.style.left = Math.max(8, left) + 'px';
 
   // Mark all filter buttons open
@@ -2960,7 +2960,14 @@ function renderProdFilterList() {
   if (!list) return;
   const hasCamp = CAMP_DATA.length > 0;
 
-  list.innerHTML = PRODUTOS.map(p => {
+  // Notice when no campaign data available yet
+  const notice = hasCamp ? '' :
+    `<div style="font-size:9.5px;color:#fbbf24;background:rgba(251,191,36,0.10);border-radius:7px;padding:6px 8px;margin-bottom:8px;line-height:1.4">
+      <strong>Dados por campanha não carregados.</strong><br>
+      Clique em ↺ para sincronizar ou aguarde o carregamento inicial.
+     </div>`;
+
+  list.innerHTML = notice + PRODUTOS.map(p => {
     const isChecked = prodFilterPending.size === 0 || prodFilterPending.has(p.cod);
     const hasData   = hasCamp
       ? CAMP_DATA.some(c => c.type === 'leads' && c.campaign_name.toLowerCase().includes(p.cod))
@@ -3024,6 +3031,21 @@ function updateFilterBadges() {
     const el = document.getElementById(id);
     if (el) { el.textContent = label; el.className = cls; }
   });
+}
+
+/* ── Load campaign data on page init (background, silent) ── */
+async function loadCampaignsFromSheets() {
+  if (!SHEETS_WEBAPP_URL) return;
+  try {
+    const resp = await fetch(SHEETS_WEBAPP_URL + '?action=campanhas', { redirect: 'follow' });
+    const json = await resp.json();
+    if (json.ok && Array.isArray(json.rows) && json.rows.length > 0) {
+      CAMP_DATA = json.rows;
+      updateMetaAdsKpis(); // re-render filter badges with real availability data
+    }
+  } catch (err) {
+    console.warn('loadCampaignsFromSheets:', err.message);
+  }
 }
 
 /* ── Compute filtered metrics from CAMP_DATA ── */
@@ -3300,9 +3322,10 @@ refreshServicos();
 // Renderiza imediatamente com dados locais (rápido)
 render();
 
-// Em background: carrega vendas e produtos da planilha
+// Em background: carrega vendas, produtos e campanhas da planilha
 loadSalesFromSheets();
 loadProductsFromSheets();
+loadCampaignsFromSheets();
 
 // ── RESIZE: garante que charts.js redimensione quando o layout muda ──────────
 // Necessário porque o CSS Grid muda de 2→1 coluna no mobile e charts.js
