@@ -1753,6 +1753,49 @@ function toggleAfiliado(show) {
   if (!show) el.value = '';
 }
 
+// ── MÁSCARAS DE ENTRADA ───────────────────────────────────────────────────────
+
+// Moeda: converte dígitos digitados para formato R$ X.XXX,XX em tempo real
+function applyBRLMask(el) {
+  let digits = el.value.replace(/\D/g, '');
+  if (!digits) { el.value = ''; return; }
+  let num = parseInt(digits, 10);
+  // Formata como centavos → reais
+  el.value = 'R$ ' + (num / 100).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  });
+}
+
+// Lê o valor numérico de um campo com máscara BRL
+function parseBRL(str) {
+  if (!str) return 0;
+  // Remove "R$", espaços, pontos de milhar; troca vírgula decimal por ponto
+  return parseFloat(str.replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+// Preenche um campo BRL a partir de um número (usado na edição)
+function fillBRL(id, num) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!num) { el.value = ''; return; }
+  el.value = 'R$ ' + parseFloat(num).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  });
+}
+
+// Telefone: formata como +XX (XX) XXXXX-XXXX enquanto digita
+function applyPhoneMask(el) {
+  let d = el.value.replace(/\D/g, '');
+  if (!d) { el.value = ''; return; }
+  let out = '+';
+  if      (d.length <= 2)  out += d;
+  else if (d.length <= 4)  out += d.slice(0,2) + ' (' + d.slice(2);
+  else if (d.length <= 9)  out += d.slice(0,2) + ' (' + d.slice(2,4) + ') ' + d.slice(4);
+  else if (d.length <= 13) out += d.slice(0,2) + ' (' + d.slice(2,4) + ') ' + d.slice(4,9) + '-' + d.slice(9);
+  else                     out += d.slice(0,2) + ' (' + d.slice(2,4) + ') ' + d.slice(4,9) + '-' + d.slice(9,13);
+  el.value = out;
+}
+
 function salvarVenda() {
   const date     = document.getElementById('sv-date').value;
   const tipo     = document.getElementById('sv-tipo').value;
@@ -1761,9 +1804,9 @@ function salvarVenda() {
   const cliente  = document.getElementById('sv-cliente').value.trim();
   const tel      = document.getElementById('sv-tel').value.trim();
   const servico  = document.getElementById('sv-servico').value;
-  const vlrSvc   = parseFloat(document.getElementById('sv-vlr-servico').value) || 0;
-  const vlrTotal = parseFloat(document.getElementById('sv-vlr-total').value) || 0;
-  const vlrRec   = parseFloat(document.getElementById('sv-vlr-recebido').value) || 0;
+  const vlrSvc   = parseBRL(document.getElementById('sv-vlr-servico').value);
+  const vlrTotal = parseBRL(document.getElementById('sv-vlr-total').value);
+  const vlrRec   = parseBRL(document.getElementById('sv-vlr-recebido').value);
   const trafego      = document.querySelector('input[name="sv-trafego"]:checked')?.value || 'Não';
   const afiliado     = document.querySelector('input[name="sv-afiliado"]:checked')?.value || 'Não';
   const nomeAfiliado = afiliado === 'Sim' ? document.getElementById('sv-nome-afiliado').value.trim() : '';
@@ -2012,9 +2055,9 @@ function editarVenda(id) {
   document.getElementById('ev-sdr').value     = venda.sdr     || '';
   document.getElementById('ev-cliente').value = venda.cliente || '';
   document.getElementById('ev-tel').value     = venda.tel     || '';
-  document.getElementById('ev-vlr-servico').value  = venda.vlrSvc   || '';
-  document.getElementById('ev-vlr-total').value    = venda.vlrTotal || '';
-  document.getElementById('ev-vlr-recebido').value = venda.vlrRec   || '';
+  fillBRL('ev-vlr-servico',  venda.vlrSvc);
+  fillBRL('ev-vlr-total',    venda.vlrTotal);
+  fillBRL('ev-vlr-recebido', venda.vlrRec);
   document.getElementById('ev-obs').value     = venda.obs     || '';
   const traf = document.querySelector('input[name="ev-trafego"][value="' + (venda.trafego || 'Não') + '"]');
   if (traf) traf.checked = true;
@@ -2047,9 +2090,9 @@ async function atualizarVenda() {
   const cliente  = document.getElementById('ev-cliente').value.trim();
   const tel      = document.getElementById('ev-tel').value.trim();
   const servico  = document.getElementById('ev-servico').value;
-  const vlrSvc   = parseFloat(document.getElementById('ev-vlr-servico').value)  || 0;
-  const vlrTotal = parseFloat(document.getElementById('ev-vlr-total').value)    || 0;
-  const vlrRec   = parseFloat(document.getElementById('ev-vlr-recebido').value) || 0;
+  const vlrSvc   = parseBRL(document.getElementById('ev-vlr-servico').value);
+  const vlrTotal = parseBRL(document.getElementById('ev-vlr-total').value);
+  const vlrRec   = parseBRL(document.getElementById('ev-vlr-recebido').value);
   const trafego      = document.querySelector('input[name="ev-trafego"]:checked')?.value  || 'Não';
   const afiliado     = document.querySelector('input[name="ev-afiliado"]:checked')?.value || 'Não';
   const nomeAfiliado = afiliado === 'Sim' ? document.getElementById('ev-nome-afiliado').value.trim() : '';
@@ -2795,7 +2838,7 @@ loadProductsFromSheets();
         </div>
         <div class="fg">
           <label>Número do Cliente</label>
-          <input type="tel" id="sv-tel" placeholder="ex: +55 11 99999-9999"/>
+          <input type="tel" id="sv-tel" placeholder="ex: +55 11 99999-9999" oninput="applyPhoneMask(this)" maxlength="20"/>
         </div>
         <div class="fg">
           <label>Nome do Serviço</label>
@@ -2808,15 +2851,15 @@ loadProductsFromSheets();
       <div class="form-row cols-3">
         <div class="fg">
           <label>Valor do Serviço (R$)</label>
-          <input type="number" id="sv-vlr-servico" placeholder="ex: 5.000" step="0.01" min="0"/>
+          <input type="text" id="sv-vlr-servico" placeholder="R$ 0,00" inputmode="numeric" oninput="applyBRLMask(this)"/>
         </div>
         <div class="fg">
           <label>Valor Total (R$)</label>
-          <input type="number" id="sv-vlr-total" placeholder="ex: 5.000" step="0.01" min="0"/>
+          <input type="text" id="sv-vlr-total" placeholder="R$ 0,00" inputmode="numeric" oninput="applyBRLMask(this)"/>
         </div>
         <div class="fg">
           <label>Valor Recebido (R$)</label>
-          <input type="number" id="sv-vlr-recebido" placeholder="ex: 1.000" step="0.01" min="0"/>
+          <input type="text" id="sv-vlr-recebido" placeholder="R$ 0,00" inputmode="numeric" oninput="applyBRLMask(this)"/>
         </div>
       </div>
 
@@ -2926,7 +2969,7 @@ loadProductsFromSheets();
         </div>
         <div class="fg">
           <label>Número do Cliente</label>
-          <input type="tel" id="ev-tel" placeholder="ex: +55 11 99999-9999"/>
+          <input type="tel" id="ev-tel" placeholder="ex: +55 11 99999-9999" oninput="applyPhoneMask(this)" maxlength="20"/>
         </div>
         <div class="fg">
           <label>Nome do Serviço</label>
@@ -2939,15 +2982,15 @@ loadProductsFromSheets();
       <div class="form-row cols-3">
         <div class="fg">
           <label>Valor do Serviço (R$)</label>
-          <input type="number" id="ev-vlr-servico" placeholder="ex: 5.000" step="0.01" min="0"/>
+          <input type="text" id="ev-vlr-servico" placeholder="R$ 0,00" inputmode="numeric" oninput="applyBRLMask(this)"/>
         </div>
         <div class="fg">
           <label>Valor Total (R$)</label>
-          <input type="number" id="ev-vlr-total" placeholder="ex: 5.000" step="0.01" min="0"/>
+          <input type="text" id="ev-vlr-total" placeholder="R$ 0,00" inputmode="numeric" oninput="applyBRLMask(this)"/>
         </div>
         <div class="fg">
           <label>Valor Recebido (R$)</label>
-          <input type="number" id="ev-vlr-recebido" placeholder="ex: 1.000" step="0.01" min="0"/>
+          <input type="text" id="ev-vlr-recebido" placeholder="R$ 0,00" inputmode="numeric" oninput="applyBRLMask(this)"/>
         </div>
       </div>
 
