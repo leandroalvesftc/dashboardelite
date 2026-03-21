@@ -933,7 +933,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
       <div>
         <div class="card-title" style="margin-bottom:4px">📋 Histórico de Vendas</div>
-        <div class="card-sub">Todas as vendas registradas (salvas no navegador)</div>
+        <div class="card-sub">Todas as vendas registradas (salvas no navegador) <span id="sync-status-vendas" style="display:none;margin-left:8px;font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:6px;padding:2px 8px"></span></div>
       </div>
       <button onclick="exportarCSV()" style="background:rgba(240,192,64,0.15);border:1.5px solid rgba(240,192,64,0.4);color:var(--gold);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:Montserrat,sans-serif">📥 Exportar CSV</button>
     </div>
@@ -1689,7 +1689,7 @@ function render(){
 const SALES_KEY = 'elite_vendas';
 const SHEETS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyoOvTrD-pFxNzw5yEx1u3OyBY2i2BMbejmgdzzvuuu8H4Aq77H8pzeB8w2vMTM0X248g/exec';
 
-function getSales()        { return JSON.parse(localStorage.getItem(SALES_KEY) || '[]'); }
+function getSales()        { try { return JSON.parse(localStorage.getItem(SALES_KEY) || '[]'); } catch(e) { return []; } }
 function saveSales(sales)  { localStorage.setItem(SALES_KEY, JSON.stringify(sales)); }
 
 // ── CLOSERS ───────────────────────────────────────────────────────────────────
@@ -2419,7 +2419,9 @@ function exportarCSV() {
   a.click();
 }
 
-renderVendasTable();
+// Só renderiza a tabela no init se já tiver dados em cache;
+// caso contrário, loadSalesFromSheets() vai cuidar do estado de carregamento
+if (getSales().length > 0) renderVendasTable();
 
 // ── PÁGINA ───────────────────────────────────────────────────────────────────
 
@@ -2691,11 +2693,16 @@ function hashId(s) {
 async function loadSalesFromSheets() {
   if (!SHEETS_WEBAPP_URL) return;
 
-  // Mostra "carregando" se não há nada no localStorage ainda
   const tbody = document.getElementById('tbody-vendas');
-  if (tbody && !getSales().length) {
+  const hasCached = getSales().length > 0;
+
+  // Mostra "carregando" apenas se não há dados em cache (não substitui dados existentes)
+  if (tbody && !hasCached) {
     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--white40);padding:28px;font-weight:600">⏳ Sincronizando com a planilha...</td></tr>';
   }
+
+  // Indicador de sync no header da seção (não substitui a tabela se há dados)
+  const syncEl = document.getElementById('sync-status-vendas');
 
   try {
     const resp = await fetch(SHEETS_WEBAPP_URL + '?action=vendas', { redirect: 'follow' });
@@ -2710,24 +2717,28 @@ async function loadSalesFromSheets() {
         id: hashId(r.date + r.cliente + String(numVal(r.vlrRec)) + r.tipo),
       }));
       saveSales(sales);
+      if (syncEl) { syncEl.textContent = ''; syncEl.style.display = 'none'; }
     } else {
       const errMsg = (!json.ok && json.error) ? json.error : 'A planilha retornou 0 vendas.';
       console.warn('loadSalesFromSheets:', errMsg);
-      if (!getSales().length && tbody) {
+      // Sempre mostra o erro visivelmente — no tbody se vazio, ou no indicador de sync se tem cache
+      if (!hasCached && tbody) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#fbbf24;padding:24px;font-weight:600;font-size:12px">
           ⚠️ ${errMsg}<br><span style="color:var(--white40);font-size:11px;font-weight:500">Verifique o Apps Script e clique em 🔄 para tentar novamente.</span>
         </td></tr>`;
         return;
       }
+      if (syncEl) { syncEl.textContent = '⚠️ ' + errMsg; syncEl.style.display = 'inline'; }
     }
   } catch (err) {
     console.warn('loadSalesFromSheets error:', err.message);
-    if (!getSales().length && tbody) {
+    if (!hasCached && tbody) {
       tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#f87171;padding:24px;font-weight:600;font-size:12px">
         ❌ Erro ao conectar à planilha: ${err.message}<br><span style="color:var(--white40);font-size:11px;font-weight:500">Clique em 🔄 para tentar novamente.</span>
       </td></tr>`;
       return;
     }
+    if (syncEl) { syncEl.textContent = '❌ Erro ao sincronizar: ' + err.message; syncEl.style.display = 'inline'; }
   }
   renderVendasTable();
   render();
@@ -2772,17 +2783,30 @@ async function refreshDashboard() {
 
     // ── Vendas ────────────────────────────────────────────────────────────
     (async () => {
+      const syncEl = document.getElementById('sync-status-vendas');
       try {
         const resp = await fetch(SHEETS_WEBAPP_URL + '?action=vendas', { redirect: 'follow' });
         const json = await resp.json();
         if (json.ok && Array.isArray(json.rows) && json.rows.length > 0) {
           const sales = json.rows.map(r => ({
             ...r,
-            id: hashId(r.date + r.cliente + String(r.vlrRec) + r.tipo),
+            sdr:      r.sdr      || '',
+            vlrSvc:   numVal(r.vlrSvc),
+            vlrTotal: numVal(r.vlrTotal),
+            vlrRec:   numVal(r.vlrRec),
+            id: hashId(r.date + r.cliente + String(numVal(r.vlrRec)) + r.tipo),
           }));
           saveSales(sales);
+          if (syncEl) { syncEl.textContent = ''; syncEl.style.display = 'none'; }
+        } else {
+          const errMsg = (!json.ok && json.error) ? json.error : 'A planilha retornou 0 vendas.';
+          console.warn('Refresh Vendas:', errMsg);
+          if (syncEl) { syncEl.textContent = '⚠️ ' + errMsg; syncEl.style.display = 'inline'; }
         }
-      } catch (err) { console.warn('Refresh Vendas:', err.message); }
+      } catch (err) {
+        console.warn('Refresh Vendas:', err.message);
+        if (syncEl) { syncEl.textContent = '❌ Erro: ' + err.message; syncEl.style.display = 'inline'; }
+      }
     })(),
   ]);
 
@@ -2910,7 +2934,13 @@ function openModal(type) {
   document.getElementById('modal-' + type).classList.add('open');
   document.body.style.overflow = 'hidden';
   if (type === 'produto') renderProdutosList();
-  if (type === 'venda')   document.getElementById('sv-date').valueAsDate = new Date();
+  if (type === 'venda') {
+    document.getElementById('sv-date').valueAsDate = new Date();
+    refreshCloserDropdowns(); // popula o select de closers com dados do localStorage
+  }
+  if (type === 'editar-venda') {
+    refreshCloserDropdowns(); // garante que os closers estejam atualizados ao editar
+  }
 }
 function closeModal(type) {
   document.getElementById('modal-' + type).classList.remove('open');
