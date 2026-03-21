@@ -378,6 +378,13 @@
       background: rgba(240,192,64,0.18); border-color: var(--gold);
       box-shadow: 0 0 14px rgba(240,192,64,0.22);
     }
+    .btn-action.btn-closer {
+      background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2);
+      color: var(--white80);
+    }
+    .btn-action.btn-closer:hover {
+      background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.38);
+    }
     .btn-action.btn-refresh {
       background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14);
       color: var(--white80); padding: 10px 13px; min-width: unset;
@@ -716,6 +723,7 @@
   </div>
   <button class="btn-action btn-venda" onclick="openModal('venda')">💰 <span class="btn-label">Registrar Venda</span></button>
   <button class="btn-action btn-produto" onclick="openModal('produto')">📦 <span class="btn-label">Registrar Produto</span></button>
+  <button class="btn-action btn-closer" onclick="openCloserModal()">👤 <span class="btn-label">Registrar Closer</span></button>
   <button class="btn-action btn-refresh" id="btn-refresh" onclick="refreshDashboard()" title="Atualizar dados da planilha"><i class="ri">🔄</i></button>
   <div class="dp-panel" id="dp-panel">
     <div class="dp-body">
@@ -977,7 +985,7 @@
       </div>
       <div>
         <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">Closer</div>
-        <input type="text" id="f-closer" placeholder="Nome..." oninput="renderVendasTable()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;outline:none"/>
+        <select id="f-closer" onchange="renderVendasTable()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;border-radius:7px;padding:6px 9px;font-size:12px;font-family:Montserrat,sans-serif;outline:none"><option value="">Todos</option></select>
       </div>
       <div>
         <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--white40);margin-bottom:5px">SDR</div>
@@ -1684,6 +1692,105 @@ const SHEETS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyoOvTrD-pFxN
 function getSales()        { return JSON.parse(localStorage.getItem(SALES_KEY) || '[]'); }
 function saveSales(sales)  { localStorage.setItem(SALES_KEY, JSON.stringify(sales)); }
 
+// ── CLOSERS ───────────────────────────────────────────────────────────────────
+const CLOSERS_KEY = 'elite_closers';
+function getClosers()         { return JSON.parse(localStorage.getItem(CLOSERS_KEY) || '[]'); }
+function saveClosers(closers) { localStorage.setItem(CLOSERS_KEY, JSON.stringify(closers)); }
+
+function refreshCloserDropdowns() {
+  const closers = getClosers();
+  const baseOpt   = '<option value="">Selecione o Closer...</option>';
+  const filterOpt = '<option value="">Todos</option>';
+  const items = closers.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+  const sv = document.getElementById('sv-closer');
+  const ev = document.getElementById('ev-closer');
+  const fv = document.getElementById('f-closer');
+  if (sv) sv.innerHTML = baseOpt   + items;
+  if (ev) ev.innerHTML = baseOpt   + items;
+  if (fv) fv.innerHTML = filterOpt + items;
+}
+
+let editingCloserId = null;
+
+function openCloserModal() {
+  editingCloserId = null;
+  const btn = document.getElementById('cp-btn');
+  if (btn) btn.textContent = 'Adicionar ✓';
+  const nm = document.getElementById('cp-nome');
+  if (nm) nm.value = '';
+  renderClosersList();
+  openModal('closer');
+}
+
+function salvarCloser() {
+  const nomeEl = document.getElementById('cp-nome');
+  const nome = (nomeEl.value || '').trim();
+  if (!nome) { alert('Informe o nome do closer.'); return; }
+  const closers = getClosers();
+  if (editingCloserId !== null) {
+    const idx = closers.findIndex(c => c.id === editingCloserId);
+    if (idx !== -1) closers[idx].nome = nome;
+    editingCloserId = null;
+    document.getElementById('cp-btn').textContent = 'Adicionar ✓';
+    document.getElementById('cp-fb').textContent = '✅ Closer atualizado!';
+  } else {
+    if (closers.find(c => c.nome.toLowerCase() === nome.toLowerCase())) {
+      alert('Closer já cadastrado com esse nome.'); return;
+    }
+    closers.push({ id: Date.now(), nome });
+    document.getElementById('cp-fb').textContent = '✅ Closer adicionado!';
+  }
+  saveClosers(closers);
+  nomeEl.value = '';
+  const fb = document.getElementById('cp-fb');
+  fb.style.display = 'block';
+  setTimeout(() => fb.style.display = 'none', 1800);
+  renderClosersList();
+  refreshCloserDropdowns();
+}
+
+function editarCloser(id) {
+  const c = getClosers().find(x => x.id === id);
+  if (!c) return;
+  editingCloserId = id;
+  document.getElementById('cp-nome').value = c.nome;
+  document.getElementById('cp-btn').textContent = 'Salvar ✓';
+  document.getElementById('cp-nome').focus();
+}
+
+function excluirCloser(id) {
+  if (!confirm('Excluir este closer?')) return;
+  const closers = getClosers().filter(c => c.id !== id);
+  saveClosers(closers);
+  if (editingCloserId === id) {
+    editingCloserId = null;
+    document.getElementById('cp-nome').value = '';
+    document.getElementById('cp-btn').textContent = 'Adicionar ✓';
+  }
+  renderClosersList();
+  refreshCloserDropdowns();
+}
+
+function renderClosersList() {
+  const list = document.getElementById('cp-list');
+  if (!list) return;
+  const closers = getClosers();
+  if (!closers.length) {
+    list.innerHTML = '<div style="color:var(--white40);font-size:12px;text-align:center;padding:24px 0">Nenhum closer cadastrado ainda.</div>';
+    return;
+  }
+  list.innerHTML = '<div style="margin-top:18px;display:flex;flex-direction:column;gap:8px">'
+    + closers.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;padding:11px 14px">
+      <span style="font-size:13px;font-weight:600">👤 ${c.nome}</span>
+      <div style="display:flex;gap:7px">
+        <button onclick="editarCloser(${c.id})" style="background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.3);color:#f0c040;padding:4px 11px;border-radius:6px;cursor:pointer;font-size:13px;font-family:Montserrat,sans-serif">✏️</button>
+        <button onclick="excluirCloser(${c.id})" style="background:rgba(232,49,42,0.15);border:1px solid rgba(232,49,42,0.3);color:#f87171;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:Montserrat,sans-serif">✕</button>
+      </div>
+    </div>`).join('')
+    + '</div>';
+}
+
 // ── HELPERS: processa dados reais de vendas ───────────────────────────────────
 function getSalesInRange() {
   const s = localDateStr(rangeStart);
@@ -1989,9 +2096,10 @@ function getFilterVal(id) {
   return el ? el.value.trim().toLowerCase() : '';
 }
 function limparFiltros() {
-  ['f-closer','f-sdr','f-cliente'].forEach(id => {
+  ['f-sdr','f-cliente'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  const fcl = document.getElementById('f-closer'); if (fcl) fcl.selectedIndex = 0;
   ['f-tipo','f-trafego','f-afiliado'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
@@ -2021,7 +2129,7 @@ function renderVendasTable() {
     });
   }
   if (fTipo)    sales = sales.filter(v => (v.tipo||'').toLowerCase().includes(fTipo));
-  if (fCloser)  sales = sales.filter(v => (v.closer||'').toLowerCase().includes(fCloser));
+  if (fCloser)  sales = sales.filter(v => (v.closer||'').toLowerCase() === fCloser);
   if (fSdr)     sales = sales.filter(v => (v.sdr||'').toLowerCase().includes(fSdr));
   if (fCliente) sales = sales.filter(v => (v.cliente||'').toLowerCase().includes(fCliente));
   if (fTraf)    sales = sales.filter(v => (v.trafego||'') === (fTraf === 'sim' ? 'Sim' : 'Não'));
@@ -2595,21 +2703,29 @@ async function loadSalesFromSheets() {
     if (json.ok && Array.isArray(json.rows) && json.rows.length > 0) {
       const sales = json.rows.map(r => ({
         ...r,
+        sdr:      r.sdr      || '',
         vlrSvc:   numVal(r.vlrSvc),
         vlrTotal: numVal(r.vlrTotal),
         vlrRec:   numVal(r.vlrRec),
         id: hashId(r.date + r.cliente + String(numVal(r.vlrRec)) + r.tipo),
       }));
       saveSales(sales);
-    } else if (!getSales().length) {
-      // Sheets retornou vazio e localStorage também está vazio
-      if (tbody) tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#fbbf24;padding:28px;font-weight:600">⚠️ Nenhum dado encontrado na planilha. Verifique se a aba "Vendas" tem dados e clique em 🔄.</td></tr>';
-      return;
+    } else {
+      const errMsg = (!json.ok && json.error) ? json.error : 'A planilha retornou 0 vendas.';
+      console.warn('loadSalesFromSheets:', errMsg);
+      if (!getSales().length && tbody) {
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#fbbf24;padding:24px;font-weight:600;font-size:12px">
+          ⚠️ ${errMsg}<br><span style="color:var(--white40);font-size:11px;font-weight:500">Verifique o Apps Script e clique em 🔄 para tentar novamente.</span>
+        </td></tr>`;
+        return;
+      }
     }
   } catch (err) {
-    console.warn('loadSalesFromSheets:', err.message);
+    console.warn('loadSalesFromSheets error:', err.message);
     if (!getSales().length && tbody) {
-      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#f87171;padding:28px;font-weight:600">❌ Erro ao conectar à planilha. Clique em 🔄 para tentar novamente.</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#f87171;padding:24px;font-weight:600;font-size:12px">
+        ❌ Erro ao conectar à planilha: ${err.message}<br><span style="color:var(--white40);font-size:11px;font-weight:500">Clique em 🔄 para tentar novamente.</span>
+      </td></tr>`;
       return;
     }
   }
@@ -2804,7 +2920,8 @@ function overlayClose(e, type) {
   if (e.target === e.currentTarget) closeModal(type);
 }
 
-// Init produtos (local cache primeiro, depois sincroniza com Sheets)
+// Init closers e produtos (local cache primeiro, depois sincroniza com Sheets)
+refreshCloserDropdowns();
 refreshServicos();
 
 // Renderiza imediatamente com dados locais (rápido)
@@ -2853,7 +2970,7 @@ loadProductsFromSheets();
         </div>
         <div class="fg">
           <label>Closer</label>
-          <input type="text" id="sv-closer" placeholder="ex: Albert"/>
+          <select id="sv-closer"><option value="">Selecione o Closer...</option></select>
         </div>
         <div class="fg">
           <label>SDR</label>
@@ -2960,6 +3077,37 @@ loadProductsFromSheets();
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
+     MODAL: EQUIPE DE CLOSERS
+════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-closer" onclick="overlayClose(event,'closer')">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <span class="modal-title">👤 Equipe de Closers</span>
+      <button class="modal-close" onclick="closeModal('closer')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--white40);margin-bottom:14px">Adicionar / Editar Closer</div>
+
+      <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end">
+        <div class="fg" style="margin-bottom:0">
+          <label>Nome completo do Closer</label>
+          <input type="text" id="cp-nome" placeholder="ex: Albert Taylor" onkeydown="if(event.key==='Enter')salvarCloser()"/>
+        </div>
+        <button id="cp-btn" class="btn-save" style="white-space:nowrap;height:40px" onclick="salvarCloser()">Adicionar ✓</button>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:8px;min-height:20px">
+        <div id="cp-fb" style="font-size:12px;color:var(--green);font-weight:700;display:none">✅ Closer adicionado!</div>
+      </div>
+
+      <div id="cp-list"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
      MODAL: EDITAR VENDA
 ════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-editar" onclick="overlayClose(event,'editar')">
@@ -2984,7 +3132,7 @@ loadProductsFromSheets();
         </div>
         <div class="fg">
           <label>Closer</label>
-          <input type="text" id="ev-closer" placeholder="ex: Albert"/>
+          <select id="ev-closer"><option value="">Selecione o Closer...</option></select>
         </div>
         <div class="fg">
           <label>SDR</label>
