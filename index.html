@@ -215,10 +215,10 @@
 
     /* TABLE */
     .table-wrap { overflow-x: auto; }
-    .table-wrap.table-limit { max-height: 258px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
-    .table-wrap.table-limit::-webkit-scrollbar { width: 5px; }
+    .table-wrap.table-limit { display: block; max-height: 280px; overflow-x: auto; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
+    .table-wrap.table-limit::-webkit-scrollbar { width: 5px; height: 5px; }
     .table-wrap.table-limit::-webkit-scrollbar-track { background: transparent; }
-    .table-wrap.table-limit::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+    .table-wrap.table-limit::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 4px; }
     .table-wrap.table-limit thead th { position: sticky; top: 0; z-index: 2; background: #0e1c7a; box-shadow: 0 1px 0 rgba(255,255,255,0.1); }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
     th {
@@ -1008,7 +1008,7 @@
       </div>
     </div>
 
-    <div class="table-wrap table-limit">
+    <div class="table-wrap table-limit" style="display:block;max-height:280px;overflow-y:auto;overflow-x:auto;">
       <table>
         <thead>
           <tr>
@@ -1037,7 +1037,7 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:4px">🤝 Vendas por Afiliado</div>
       <div class="card-sub">Resultados no período selecionado</div>
-      <div class="table-wrap table-limit">
+      <div class="table-wrap table-limit" style="display:block;max-height:280px;overflow-y:auto;overflow-x:auto;">
         <table>
           <thead>
             <tr>
@@ -1057,7 +1057,7 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:4px">📡 Vendas por Tráfego</div>
       <div class="card-sub">Comparativo com e sem tráfego pago</div>
-      <div class="table-wrap table-limit">
+      <div class="table-wrap table-limit" style="display:block;max-height:280px;overflow-y:auto;overflow-x:auto;">
         <table>
           <thead>
             <tr>
@@ -1085,7 +1085,7 @@
         <div class="card-sub">Desempenho individual no período selecionado</div>
       </div>
     </div>
-    <div class="table-wrap table-limit">
+    <div class="table-wrap table-limit" style="display:block;max-height:280px;overflow-y:auto;overflow-x:auto;">
       <table>
         <thead>
           <tr>
@@ -1207,7 +1207,7 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:4px">📋 Comparativo por Produto</div>
       <div class="card-sub">Todas as métricas disponíveis por produto no período selecionado</div>
-      <div class="table-wrap table-limit">
+      <div class="table-wrap table-limit" style="display:block;max-height:280px;overflow-y:auto;overflow-x:auto;">
         <table class="prod-table">
           <thead>
             <tr>
@@ -2582,19 +2582,36 @@ function hashId(s) {
 
 async function loadSalesFromSheets() {
   if (!SHEETS_WEBAPP_URL) return;
+
+  // Mostra "carregando" se não há nada no localStorage ainda
+  const tbody = document.getElementById('tbody-vendas');
+  if (tbody && !getSales().length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--white40);padding:28px;font-weight:600">⏳ Sincronizando com a planilha...</td></tr>';
+  }
+
   try {
     const resp = await fetch(SHEETS_WEBAPP_URL + '?action=vendas', { redirect: 'follow' });
     const json = await resp.json();
     if (json.ok && Array.isArray(json.rows) && json.rows.length > 0) {
       const sales = json.rows.map(r => ({
         ...r,
-        id: hashId(r.date + r.cliente + String(r.vlrRec) + r.tipo),
+        vlrSvc:   numVal(r.vlrSvc),
+        vlrTotal: numVal(r.vlrTotal),
+        vlrRec:   numVal(r.vlrRec),
+        id: hashId(r.date + r.cliente + String(numVal(r.vlrRec)) + r.tipo),
       }));
       saveSales(sales);
+    } else if (!getSales().length) {
+      // Sheets retornou vazio e localStorage também está vazio
+      if (tbody) tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#fbbf24;padding:28px;font-weight:600">⚠️ Nenhum dado encontrado na planilha. Verifique se a aba "Vendas" tem dados e clique em 🔄.</td></tr>';
+      return;
     }
   } catch (err) {
-    // Silencioso — usa o que já tem no localStorage
     console.warn('loadSalesFromSheets:', err.message);
+    if (!getSales().length && tbody) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#f87171;padding:28px;font-weight:600">❌ Erro ao conectar à planilha. Clique em 🔄 para tentar novamente.</td></tr>';
+      return;
+    }
   }
   renderVendasTable();
   render();
