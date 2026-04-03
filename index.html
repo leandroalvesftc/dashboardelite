@@ -1618,10 +1618,12 @@ function applyPicker(){
 function render(){
   const days      = rngDays();
   const n         = days.length;
-  const invLeads  = rng(RAW.inv_leads);
-  const invBrand  = rng(RAW.inv_brand);
+  // Usa dados reais da planilha (METAADS_DATA) quando disponíveis; fallback para RAW (mock)
+  const meta      = getMetaInRange();
+  const invLeads  = meta.invLeads;
+  const invBrand  = meta.invBrand;
   const invest    = invLeads.map((v,i)=>v+invBrand[i]);
-  const leads     = rng(RAW.leads);
+  const leads     = meta.leads;
   // Dados reais de vendas (do localStorage) filtrados pelo período selecionado
   const salesA    = buildSalesDailyArrays(days);
   const vNovas    = salesA.v_novas;
@@ -1629,10 +1631,10 @@ function render(){
   const fatNovos  = salesA.fat_novos;
   const fatRec    = salesA.fat_rec;
   const fatTotal  = fatNovos.map((v,i)=>v+fatRec[i]);
-  const imp       = rng(RAW.impressions);
-  const reach     = rng(RAW.reach);
-  const ctr       = rng(RAW.ctr);
-  const cpm       = rng(RAW.cpm);
+  const imp       = meta.impressions;
+  const reach     = meta.reach;
+  const ctr       = meta.ctr;
+  const cpm       = meta.cpm;
   const labels    = days.map(lbl);
 
   const tInv      = sum(invest);
@@ -2886,20 +2888,65 @@ async function loadSalesFromSheets() {
 
 // ── FILTRO DE PRODUTO: Meta Ads (shared, afeta todas as métricas) ────────────
 
+// Normaliza string para comparação robusta: minúsculas, sem acentos, sem colchetes, sem espaços duplos
+function normStr(s) {
+  return String(s || '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove diacríticos (acentos)
+    .replace(/[\[\]]/g, '')   // remove colchetes
+    .replace(/\s+/g, ' ')     // normaliza espaços
+    .trim();
+}
+
+// Verifica se o nome da campanha contém a palavra-chave do produto (matching normalizado)
+function campMatchesProd(campaignName, cod) {
+  return normStr(campaignName).includes(normStr(cod));
+}
+
 const PRODUTOS = [
-  { nome: 'Conecta Canadá',         cod: '[conecta canadá]'         },
-  { nome: 'Café com Vistologista',  cod: '[café com vistologista]'  },
-  { nome: 'Assessoria para Vistos', cod: '[assessoria]'             },
-  { nome: 'Viagem Estratégica',     cod: '[viagem estratégica]'     },
-  { nome: 'Live Semanal',           cod: '[lives]'                  },
-  { nome: 'FOIA',                   cod: '[foia]'                   },
-  { nome: 'Haiti',                  cod: '[haiti]'                  },
-  { nome: 'Processo Seletivo',      cod: '[processo seletivo]'      },
-  { nome: 'Consulta EUA',           cod: '[consulta eua]'           },
+  { nome: 'Conecta Canadá',         cod: 'conecta canada'        },
+  { nome: 'Café com Vistologista',  cod: 'cafe com vistologista' },
+  { nome: 'Assessoria para Vistos', cod: 'assessoria'            },
+  { nome: 'Viagem Estratégica',     cod: 'viagem estrategica'    },
+  { nome: 'Live Semanal',           cod: 'live'                  },
+  { nome: 'FOIA',                   cod: 'foia'                  },
+  { nome: 'Haiti',                  cod: 'haiti'                 },
+  { nome: 'Processo Seletivo',      cod: 'processo seletivo'     },
+  { nome: 'Consulta EUA',           cod: 'consulta eua'          },
 ];
+
+// Account-level daily data from ?action=metaads: [{date, invTotal, invLeads, invBrand, leads, impressions, reach, ctr, cpm}]
+let METAADS_DATA = [];
 
 // Campaign-level data from ?action=campanhas: [{date, campaign_name, type, spend, leads, impressions, ctr, cpm}]
 let CAMP_DATA = [];
+
+// Retorna arrays de dados do Meta Ads filtrados pelo período selecionado.
+// Usa METAADS_DATA (dados reais da planilha) se disponível; cai para RAW (mock) caso contrário.
+function getMetaInRange() {
+  const days = rngDays();
+  if (METAADS_DATA.length === 0) {
+    return {
+      invLeads:    rng(RAW.inv_leads),
+      invBrand:    rng(RAW.inv_brand),
+      leads:       rng(RAW.leads),
+      impressions: rng(RAW.impressions),
+      reach:       rng(RAW.reach),
+      ctr:         rng(RAW.ctr),
+      cpm:         rng(RAW.cpm),
+    };
+  }
+  const byDate = {};
+  METAADS_DATA.forEach(r => { byDate[r.date] = r; });
+  return {
+    invLeads:    days.map(d => (byDate[d] ? byDate[d].invLeads    : 0)),
+    invBrand:    days.map(d => (byDate[d] ? byDate[d].invBrand    : 0)),
+    leads:       days.map(d => (byDate[d] ? byDate[d].leads       : 0)),
+    impressions: days.map(d => (byDate[d] ? byDate[d].impressions : 0)),
+    reach:       days.map(d => (byDate[d] ? byDate[d].reach       : 0)),
+    ctr:         days.map(d => (byDate[d] ? byDate[d].ctr         : 0)),
+    cpm:         days.map(d => (byDate[d] ? byDate[d].cpm         : 0)),
+  };
+}
 
 // Currently pending selection in the open panel (applied only when "Aplicar" is clicked)
 let prodFilterPending = new Set(); // empty = all
@@ -2967,16 +3014,21 @@ function renderProdFilterList() {
       Clique em ↺ para sincronizar ou aguarde o carregamento inicial.
      </div>`;
 
+  // Filtra CAMP_DATA pelo período selecionado para mostrar disponibilidade correta
+  const selectedDays = new Set(rngDays());
+  const campInRange  = CAMP_DATA.filter(c => selectedDays.has(c.date));
+
   list.innerHTML = notice + PRODUTOS.map(p => {
     const isChecked = prodFilterPending.size === 0 || prodFilterPending.has(p.cod);
-    const hasData   = hasCamp
-      ? CAMP_DATA.some(c => c.type === 'leads' && c.campaign_name.toLowerCase().includes(p.cod))
+    // Verifica se existe alguma campanha no período selecionado que bate com o produto
+    const hasData = hasCamp
+      ? campInRange.some(c => campMatchesProd(c.campaign_name, p.cod))
       : true;
     const dim = hasCamp && !hasData ? ' style="opacity:0.38"' : '';
     const noDataLabel = hasCamp && !hasData
       ? '<span style="font-size:9px;color:var(--white40);margin-left:auto">sem dados</span>' : '';
 
-    return `<div class="kfp-item${isChecked ? ' checked' : ''}"${dim} onclick="prodFilterToggle(event,'${p.cod.replace(/\[/g,'\[').replace(/\]/g,'\]')}',this)">
+    return `<div class="kfp-item${isChecked ? ' checked' : ''}"${dim} onclick="prodFilterToggle(event,'${p.cod}',this)">
       <span class="kfp-check"></span>
       <span>${p.nome}</span>${noDataLabel}
     </div>`;
@@ -2986,20 +3038,19 @@ function renderProdFilterList() {
 /* ── Toggle one product in the pending set ── */
 function prodFilterToggle(e, cod, el) {
   e.stopPropagation(); // evita que o click bubbleie para o document listener e feche o painel
-  // decode escaped brackets back
-  cod = cod.replace(/\\[/g,'[').replace(/\\]/g,']');
 
   if (prodFilterPending.size === 0) {
-    // Was "all" → switch to "all except this one"
-    prodFilterPending = new Set(PRODUTOS.map(p => p.cod));
-    prodFilterPending.delete(cod);
+    // Estado "todos" → seleciona APENAS este produto
+    prodFilterPending = new Set([cod]);
   } else if (prodFilterPending.has(cod)) {
+    // Já estava selecionado → remove
     prodFilterPending.delete(cod);
-    // If nothing left selected, reset to all
+    // Se não sobrar nenhum, volta para "todos"
     if (prodFilterPending.size === 0) prodFilterPending = new Set();
   } else {
+    // Adiciona ao conjunto de selecionados
     prodFilterPending.add(cod);
-    // If all are now selected, reset to "all"
+    // Se todos estiverem marcados, volta para o estado "todos"
     if (prodFilterPending.size === PRODUTOS.length) prodFilterPending = new Set();
   }
   renderProdFilterList();
@@ -3033,6 +3084,26 @@ function updateFilterBadges() {
   });
 }
 
+/* ── Carrega dados agregados do Meta Ads no init (background, silencioso) ── */
+async function loadMetaAdsFromSheets() {
+  if (!SHEETS_WEBAPP_URL) return;
+  try {
+    const resp = await fetch(SHEETS_WEBAPP_URL + '?action=metaads', { redirect: 'follow' });
+    const json = await resp.json();
+    if (json.ok && json.rows && json.rows.length > 0) {
+      METAADS_DATA = json.rows;
+      const ultima = json.rows[json.rows.length - 1].date;
+      const el = document.getElementById('last-update');
+      if (el) el.textContent = new Date(ultima + 'T12:00:00').toLocaleDateString('pt-BR',
+        { day:'2-digit', month:'short' }) + ' · sincronizado';
+      render(); // re-renderiza com dados reais
+      if (typeof updateMetaAdsKpis === 'function') updateMetaAdsKpis();
+    }
+  } catch (err) {
+    console.warn('loadMetaAdsFromSheets:', err.message);
+  }
+}
+
 /* ── Load campaign data on page init (background, silent) ── */
 async function loadCampaignsFromSheets() {
   if (!SHEETS_WEBAPP_URL) return;
@@ -3041,7 +3112,7 @@ async function loadCampaignsFromSheets() {
     const json = await resp.json();
     if (json.ok && Array.isArray(json.rows) && json.rows.length > 0) {
       CAMP_DATA = json.rows;
-      updateMetaAdsKpis(); // re-render filter badges with real availability data
+      updateMetaAdsKpis(); // recalcula KPIs Meta Ads com dados reais de campanhas
     }
   } catch (err) {
     console.warn('loadCampaignsFromSheets:', err.message);
@@ -3050,35 +3121,39 @@ async function loadCampaignsFromSheets() {
 
 /* ── Compute filtered metrics from CAMP_DATA ── */
 function computeFilteredMetaMetrics() {
-  const allDays = new Set(genDays(DATA_DAYS));
+  // Sempre filtra pelo período SELECIONADO pelo usuário (rangeStart → rangeEnd)
+  const selectedDays = new Set(rngDays());
 
   if (CAMP_DATA.length === 0 || prodFilterActive.size === 0) {
-    // No campaign data or "all" selected → use aggregated RAW
-    const tInvL  = sum(rng(RAW.inv_leads));
-    const tLeads = sum(rng(RAW.leads));
+    // Sem dados de campanha ou filtro "todos" → usa dados agregados da planilha (METAADS_DATA)
+    const meta   = getMetaInRange();
+    const tInvL  = sum(meta.invLeads);
+    const tLeads = sum(meta.leads);
+    const ctrArr = meta.ctr.filter(v => v > 0);
+    const cpmArr = meta.cpm.filter(v => v > 0);
     return {
       invLeads: tInvL,
       leads:    tLeads,
       cpl:      tLeads > 0 ? tInvL / tLeads : 0,
-      ctr:      avg(rng(RAW.ctr)),
-      cpm:      avg(rng(RAW.cpm)),
+      ctr:      ctrArr.length > 0 ? avg(ctrArr) : 0,
+      cpm:      cpmArr.length > 0 ? avg(cpmArr) : 0,
       fromCamp: false,
     };
   }
 
   const active  = prodFilterActive;
+  // Filtra campanhas do período selecionado que batem com os produtos ativos
+  // Não restringe por type ('leads'/'outros') pois classificação depende da config do Sheets
   const matches = CAMP_DATA.filter(c => {
-    if (!allDays.has(c.date)) return false;
-    if (c.type !== 'leads')   return false;
-    const name = c.campaign_name.toLowerCase();
-    return [...active].some(cod => name.includes(cod));
+    if (!selectedDays.has(c.date)) return false;
+    return [...active].some(cod => campMatchesProd(c.campaign_name, cod));
   });
 
   const invLeads  = matches.reduce((s, c) => s + c.spend,       0);
   const leads     = matches.reduce((s, c) => s + c.leads,       0);
   const totalImp  = matches.reduce((s, c) => s + c.impressions, 0);
   const cpl       = leads   > 0 ? invLeads / leads : 0;
-  // Impression-weighted CTR and CPM
+  // CTR e CPM ponderados por impressões
   const ctr = totalImp > 0
     ? matches.reduce((s, c) => s + c.ctr * c.impressions, 0) / totalImp : 0;
   const cpm = totalImp > 0
@@ -3113,19 +3188,8 @@ async function refreshDashboard() {
         const resp = await fetch(SHEETS_WEBAPP_URL + '?action=metaads', { redirect: 'follow' });
         const json = await resp.json();
         if (json.ok && json.rows && json.rows.length > 0) {
-          const byDate = {};
-          json.rows.forEach(r => { byDate[r.date] = r; });
-          const allDays = genDays(DATA_DAYS);
-          allDays.forEach((d, i) => {
-            const r = byDate[d];
-            RAW.inv_leads[i]   = r ? r.invLeads    : RAW.inv_leads[i];
-            RAW.inv_brand[i]   = r ? r.invBrand    : RAW.inv_brand[i];
-            RAW.leads[i]       = r ? r.leads       : RAW.leads[i];
-            RAW.impressions[i] = r ? r.impressions : RAW.impressions[i];
-            RAW.reach[i]       = r ? r.reach       : RAW.reach[i];
-            RAW.ctr[i]         = r ? r.ctr         : RAW.ctr[i];
-            RAW.cpm[i]         = r ? r.cpm         : RAW.cpm[i];
-          });
+          // Armazena TODOS os dados reais diretamente — sem misturar com mock
+          METAADS_DATA = json.rows;
           const ultima = json.rows[json.rows.length - 1].date;
           document.getElementById('last-update').textContent =
             new Date(ultima + 'T12:00:00').toLocaleDateString('pt-BR',
@@ -3322,7 +3386,8 @@ refreshServicos();
 // Renderiza imediatamente com dados locais (rápido)
 render();
 
-// Em background: carrega vendas, produtos e campanhas da planilha
+// Em background: carrega Meta Ads, vendas, produtos e campanhas da planilha
+loadMetaAdsFromSheets();   // ← dados reais de investimento/leads/CPL/CTR/CPM
 loadSalesFromSheets();
 loadProductsFromSheets();
 loadCampaignsFromSheets();
